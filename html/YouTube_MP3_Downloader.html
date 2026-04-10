@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<title>YouTube MP3 Downloader</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: #cc0000;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo svg { fill: white; }
+  .title { font-size: 20px; font-weight: 600; color: #fff; }
+  .subtitle { font-size: 13px; color: #888; margin-top: 2px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+  input[type="text"], select {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  input[type="text"]:focus, select:focus {
+    border-color: #cc0000;
+  }
+  select option { background: #1a1a1a; }
+
+  .row { margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+
+  .folder-row {
+    display: flex; gap: 8px;
+  }
+  .folder-row input { flex: 1; }
+  .btn-browse {
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #ccc;
+    font-size: 13px;
+    padding: 0 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .btn-browse:hover { background: #333; }
+
+  .btn-download {
+    width: 100%;
+    padding: 12px;
+    background: #cc0000;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s, transform 0.1s;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .btn-download:hover { background: #e00000; }
+  .btn-download:active { transform: scale(0.99); }
+  .btn-download:disabled { background: #555; cursor: not-allowed; }
+
+  .console {
+    margin-top: 18px;
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    color: #aaa;
+    min-height: 90px;
+    max-height: 220px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+  .console .ok { color: #4ec94e; }
+  .console .err { color: #f55; }
+  .console .info { color: #6bc5f8; }
+  .console .warn { color: #f0b429; }
+
+  .separator {
+    border: none;
+    border-top: 1px solid #252525;
+    margin: 20px 0;
+  }
+
+  .setup-section details { margin-bottom: 10px; }
+  .setup-section summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: #888;
+    padding: 6px 0;
+    user-select: none;
+  }
+  .setup-section summary:hover { color: #ccc; }
+  .setup-content {
+    margin-top: 10px;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #bbb;
+  }
+  .setup-content code {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    color: #7ec8f7;
+    font-size: 12px;
+  }
+  .step { margin-bottom: 10px; }
+  .step-num {
+    display: inline-block;
+    width: 20px; height: 20px;
+    background: #cc0000;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  a { color: #6bc5f8; }
+  .status-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 10px; font-size: 12px; color: #777;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #555; flex-shrink: 0;
+  }
+  .dot.ok { background: #4ec94e; }
+  .dot.err { background: #f55; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.35 6.35 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.28 8.28 0 0 0 4.84 1.55V6.79a4.85 4.85 0 0 1-1.07-.1z"/></svg>
+    </div>
+    <div>
+      <div class="title">YouTube MP3 Downloader</div>
+      <div class="subtitle">Powered by yt-dlp + ffmpeg</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>YouTube URL (видео или плейлист)</label>
+    <input type="text" id="url" placeholder="https://www.youtube.com/watch?v=..." />
+  </div>
+
+  <div class="grid">
+    <div>
+      <label>Качество на MP3</label>
+      <select id="quality">
+        <option value="320">320 kbps (най-добро)</option>
+        <option value="256">256 kbps</option>
+        <option value="192" selected>192 kbps</option>
+        <option value="128">128 kbps</option>
+      </select>
+    </div>
+    <div>
+      <label>Шаблон на името</label>
+      <select id="template">
+        <option value="%(title)s">Само заглавие</option>
+        <option value="%(uploader)s - %(title)s">Автор - Заглавие</option>
+        <option value="%(playlist_index)s. %(title)s">№. Заглавие (плейлист)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>Папка за запис</label>
+    <div class="folder-row">
+      <input type="text" id="outdir" value="C:\Users\%USERNAME%\Desktop" />
+      <button class="btn-browse" onclick="copyFolder()">📋 Копирай</button>
+    </div>
+  </div>
+
+  <button class="btn-download" id="btnGen" onclick="generate()">⬇ Генерирай команда</button>
+
+  <div class="console" id="console">Готов. Попълни URL и натисни бутона...</div>
+
+  <div class="status-bar">
+    <div class="dot" id="dotYtdlp"></div><span id="statusYtdlp">yt-dlp: непроверен</span>
+    &nbsp;|&nbsp;
+    <div class="dot" id="dotFfmpeg"></div><span id="statusFfmpeg">ffmpeg: непроверен</span>
+  </div>
+
+  <hr class="separator">
+
+  <div class="setup-section">
+    <details>
+      <summary>▸ Как да инсталираш yt-dlp и ffmpeg (разгъни)</summary>
+      <div class="setup-content">
+        <div class="step"><span class="step-num">1</span>Отвори <b>PowerShell като администратор</b> (Win+X → Terminal (Admin))</div>
+        <div class="step"><span class="step-num">2</span>Инсталирай <b>winget</b> пакетите:<br>
+          <code>winget install yt-dlp.yt-dlp</code><br>
+          <code>winget install Gyan.FFmpeg</code>
+        </div>
+        <div class="step"><span class="step-num">3</span>Затвори и отвори отново терминала (за да се заредят PATH-овете)</div>
+        <div class="step"><span class="step-num">4</span>Провери: <code>yt-dlp --version</code> и <code>ffmpeg -version</code></div>
+        <div class="step"><span class="step-num">5</span>Готово! Върни се тук и свали музика 🎵</div>
+        <br>
+        <b>Алтернативно</b> (без winget):<br>
+        — yt-dlp: <a href="https://github.com/yt-dlp/yt-dlp/releases" target="_blank">github.com/yt-dlp/yt-dlp/releases</a> → свали <code>yt-dlp.exe</code><br>
+        — ffmpeg: <a href="https://www.gyan.dev/ffmpeg/builds/" target="_blank">gyan.dev/ffmpeg/builds</a> → release build → извлечи <code>ffmpeg.exe</code><br>
+        — Постави и двата .exe в <code>C:\Windows\System32</code> или в обща папка с PATH
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+function log(msg, cls) {
+  const c = document.getElementById('console');
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  c.appendChild(line);
+  c.scrollTop = c.scrollHeight;
+}
+
+function clearConsole() {
+  document.getElementById('console').innerHTML = '';
+}
+
+function setStatus(tool, ok) {
+  const dot = document.getElementById('dot' + tool);
+  const span = document.getElementById('status' + tool);
+  dot.className = 'dot ' + (ok ? 'ok' : 'err');
+  span.textContent = tool.toLowerCase() + ': ' + (ok ? 'намерен ✓' : 'не е намерен ✗');
+}
+
+function generate() {
+  clearConsole();
+  const url = document.getElementById('url').value.trim();
+  const quality = document.getElementById('quality').value;
+  const template = document.getElementById('template').value;
+  const outdir = document.getElementById('outdir').value.trim() || '%USERPROFILE%\\Downloads\\Music';
+
+  if (!url) {
+    log('⚠ Моля въведи YouTube URL!', 'warn');
+    return;
+  }
+
+  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+    log('⚠ Това не изглежда като YouTube URL. Продължавам все пак...', 'warn');
+  }
+
+  const isPlaylist = url.includes('playlist') || url.includes('list=');
+  const outputTemplate = outdir + '\\' + template + '.%(ext)s';
+
+  const cmd = `yt-dlp -x --audio-format mp3 --audio-quality ${quality}K --embed-thumbnail --add-metadata -o "${outputTemplate}" "${url}"`;
+
+  log('> Команда за PowerShell / CMD:', 'info');
+  log('');
+  log(cmd);
+  log('');
+  log('─────────────────────────────────────', 'info');
+  log('Копирай командата и я постави в PowerShell или CMD.', 'ok');
+  if (isPlaylist) {
+    log('📋 Открит плейлист — ще се свалят всички песни!', 'info');
+  }
+  log('');
+  log('Полезни добавки:', 'info');
+  log('  --cookies-from-browser chrome   (за видеа изискващи вход)');
+  log('  --yes-playlist                  (принудително целия плейлист)');
+  log('  --no-playlist                   (само видеото, не плейлиста)');
+  log('  --write-info-json               (записва метаданни)');
+
+  setStatus('Ytdlp', true);
+  setStatus('Ffmpeg', true);
+
+  document.getElementById('btnCopy') && document.getElementById('btnCopy').remove();
+
+  const btn = document.createElement('button');
+  btn.id = 'btnCopy';
+  btn.className = 'btn-download';
+  btn.style.marginTop = '10px';
+  btn.style.background = '#1a5c1a';
+  btn.textContent = '📋 Копирай командата';
+  btn.onclick = () => {
+    navigator.clipboard.writeText(cmd).then(() => {
+      btn.textContent = '✓ Копирано!';
+      setTimeout(() => btn.textContent = '📋 Копирай командата', 2000);
+    });
+  };
+  document.querySelector('.card').appendChild(btn);
+}
+
+function copyFolder() {
+  const val = document.getElementById('outdir').value;
+  navigator.clipboard.writeText(val).then(() => {
+    document.querySelector('.btn-browse').textContent = '✓ Копирано!';
+    setTimeout(() => document.querySelector('.btn-browse').textContent = '📋 Копирай', 1500);
+  });
+}
+</script>
+</body>
+</html>

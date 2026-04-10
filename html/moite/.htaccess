@@ -1,0 +1,5 @@
+AddDefaultCharset UTF-8
+
+<Files "navhub-data.json">
+    Require all denied
+</Files>

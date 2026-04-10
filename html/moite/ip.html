@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS, WHOIS & Country by IP | Локални инструменти</title>
+    
+    <!-- Фавиконка като емоджи -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+    
+    <style>
+        body {font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; padding: 20px; background:#f8f9fa; color:#333;}
+        header {background:#007bff; color:white; padding:20px; text-align:center; border-radius:8px;}
+        h1 {margin:0; font-size:1.8em;}
+        .ip {background:#28a745; color:white; padding:12px; margin:20px 0; text-align:center; border-radius:6px; font-size:1.2em; font-weight:bold;}
+        .tool {background:white; padding:20px; border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,0.1); margin:20px 0;}
+        input {padding:8px; width:250px; border:1px solid #ddd; border-radius:4px;}
+        button {padding:8px 16px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;}
+        button:hover {background:#0056b3;}
+        .result {margin-top:15px; padding:10px; background:#e9ecef; border-radius:4px; white-space:pre-wrap; font-size:0.9em; max-height:300px; overflow-y:auto;}
+        footer {text-align:center; margin-top:40px; color:#666; font-size:0.9em;}
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>DNS Lookup • WHOIS • Country by IP</h1>
+    <p>Всичко работи локално с публични API-та</p>
+</header>
+
+<div class="ip" id="ip-box">Вашият IP се зарежда…</div>
+
+<div class="tool">
+    <h3>DNS Lookup</h3>
+    <input type="text" id="dns-input" placeholder="Въведи домейн (напр. example.com)" value="example.com">
+    <button onclick="doDNS()">Търси</button>
+    <div id="dns-result" class="result"></div>
+</div>
+
+<div class="tool">
+    <h3>WHOIS</h3>
+    <input type="text" id="whois-input" placeholder="Въведи домейн (напр. example.com)" value="example.com">
+    <button onclick="doWHOIS()">Търси</button>
+    <div id="whois-result" class="result"></div>
+</div>
+
+<div class="tool">
+    <h3>Country by IP</h3>
+    <input type="text" id="ip-input" placeholder="Въведи IP (остави празно за твоя)" value="">
+    <button onclick="doCountry()">Търси</button>
+    <div id="country-result" class="result"></div>
+</div>
+
+<footer>
+    <p>Използвани API-та: Google DNS , who-dat , ip-api.com  • Направено с обич</p>
+</footer>
+
+<script>
+    let userIP = '';
+
+    // Зареждане на реалния IP
+    fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(data => {
+            userIP = data.ip;
+            document.getElementById('ip-box').innerHTML = `Вашият IP адрес: ${userIP}`;
+            document.getElementById('ip-input').placeholder = `Въведи IP (остави празно за ${userIP})`;
+        })
+        .catch(() => {
+            document.getElementById('ip-box').innerHTML = 'Не можа да се зареди IP';
+        });
+
+    // DNS Lookup
+    function doDNS() {
+        const domain = document.getElementById('dns-input').value;
+        if (!domain) return alert('Въведи домейн!');
+        fetch(`https://dns.google/resolve?name=${domain}&type=A`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('dns-result').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(err => {
+                document.getElementById('dns-result').innerHTML = `Грешка: ${err}`;
+            });
+    }
+
+    // WHOIS
+    function doWHOIS() {
+        const domain = document.getElementById('whois-input').value;
+        if (!domain) return alert('Въведи домейн!');
+        fetch(`https://who-dat.dev/api/${domain}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('whois-result').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(err => {
+                document.getElementById('whois-result').innerHTML = `Грешка: ${err}`;
+            });
+    }
+
+    // Country by IP
+    function doCountry() {
+        let ip = document.getElementById('ip-input').value || userIP;
+        if (!ip) return alert('Въведи IP или изчакай зареждането!');
+        fetch(`http://ip-api.com/json/${ip}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('country-result').innerHTML = JSON.stringify(data, null, 2);
+            })
+            .catch(err => {
+                document.getElementById('country-result').innerHTML = `Грешка: ${err}`;
+            });
+    }
+
+    // Автоматично търсене за твоя IP в Country
+    if (userIP) doCountry();
+</script>
+
+
+	<!-- === ЕДИНСТВЕН КОД ЗА ВСИЧКИ СТРАНИЦИ === -->
+<div class="ns-back">
+  <button class="ns-back-btn" onclick="window.location.href='index.html'">
+    🏠 Home Назад
+  </button>
+</div>
+
+<style>
+  .ns-back {
+    position: fixed;
+    bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+  .ns-back-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    transition: all 0.25s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .ns-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+    background: #4f46e5;
+  }
+  [data-theme="dark"] .ns-back-btn {
+    background: #818cf8;
+    box-shadow: 0 4px 12px rgba(129,140,248,0.3);
+  }
+  [data-theme="dark"] .ns-back-btn:hover {
+    background: #6366f1;
+  }
+</style>
+
+</body>
+</html>

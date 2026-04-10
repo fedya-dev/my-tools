@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Редактор</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #475569;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #cbd5e1;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .lang-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .tool-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+        }
+
+        .tool-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .tool-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .upload-area {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            margin-top: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .upload-area.active {
+            display: block;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .file-list {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .file-list.active {
+            display: block;
+        }
+
+        .file-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-name {
+            font-weight: 600;
+        }
+
+        .file-size {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            display: none;
+        }
+
+        .action-buttons.active {
+            display: flex;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            <span data-lang="title">PDF Редактор</span>
+        </div>
+        <div class="controls">
+            <select class="lang-select" id="langSelect">
+                <option value="bg">Български</option>
+                <option value="en">English</option>
+            </select>
+            <button class="btn-icon" id="themeToggle" title="Смяна на тема">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1 data-lang="heroTitle">PDF Редактор</h1>
+            <p data-lang="heroSubtitle">Редактирайте, обединявайте, разделяйте, компресирайте и конвертирайте PDF файлове мигновено във вашия браузър</p>
+        </div>
+
+        <div class="tools-grid">
+            <div class="tool-card" data-tool="merge">
+                <div class="tool-icon">📄</div>
+                <h3 data-lang="merge">Обединяване</h3>
+                <p data-lang="mergeDesc">Обединете множество PDF файлове в един документ</p>
+            </div>
+            <div class="tool-card" data-tool="split">
+                <div class="tool-icon">✂️</div>
+                <h3 data-lang="split">Разделяне</h3>
+                <p data-lang="splitDesc">Разделете PDF на отделни страници</p>
+            </div>
+            <div class="tool-card" data-tool="compress">
+                <div class="tool-icon">🗜️</div>
+                <h3 data-lang="compress">Компресиране</h3>
+                <p data-lang="compressDesc">Намалете размера на PDF файла</p>
+            </div>
+            <div class="tool-card" data-tool="rotate">
+                <div class="tool-icon">🔄</div>
+                <h3 data-lang="rotate">Завъртане</h3>
+                <p data-lang="rotateDesc">Завъртете страници в PDF документ</p>
+            </div>
+            <div class="tool-card" data-tool="extract">
+                <div class="tool-icon">📑</div>
+                <h3 data-lang="extract">Извличане</h3>
+                <p data-lang="extractDesc">Извлечете конкретни страници от PDF</p>
+            </div>
+            <div class="tool-card" data-tool="delete">
+                <div class="tool-icon">🗑️</div>
+                <h3 data-lang="delete">Изтриване</h3>
+                <p data-lang="deleteDesc">Премахнете ненужни страници</p>
+            </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <h3 data-lang="uploadTitle">Пуснете PDF файлове тук</h3>
+            <p data-lang="uploadDesc">или кликнете за избор на файлове</p>
+            <input type="file" class="file-input" id="fileInput" accept=".pdf" multiple>
+            <button class="btn-primary" onclick="document.getElementById('fileInput').click()" data-lang="selectFiles">Избери файлове</button>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="action-buttons" id="actionButtons">
+            <button class="btn-primary" id="processBtn" data-lang="process">Обработи</button>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const translations = {
+            bg: {
+                title: 'PDF Редактор',
+                heroTitle: 'PDF Редактор',
+                heroSubtitle: 'Редактирайте, обединявайте, разделяйте, компресирайте и конвертирайте PDF файлове мигновено във вашия браузър',
+                merge: 'Обединяване',
+                mergeDesc: 'Обединете множество PDF файлове в един документ',
+                split: 'Разделяне',
+                splitDesc: 'Разделете PDF на отделни страници',
+                compress: 'Компресиране',
+                compressDesc: 'Намалете размера на PDF файла',
+                rotate: 'Завъртане',
+                rotateDesc: 'Завъртете страници в PDF документ',
+                extract: 'Извличане',
+                extractDesc: 'Извлечете конкретни страници от PDF',
+                delete: 'Изтриване',
+                deleteDesc: 'Премахнете ненужни страници',
+                uploadTitle: 'Пуснете PDF файлове тук',
+                uploadDesc: 'или кликнете за избор на файлове',
+                selectFiles: 'Избери файлове',
+                process: 'Обработи',
+                remove: 'Премахни',
+                success: 'Успешно обработено!',
+                error: 'Грешка при обработка',
+                download: 'Изтегли',
+                selectTool: 'Изберете инструмент отгоре'
+            },
+            en: {
+                title: 'PDF Editor',
+                heroTitle: 'PDF Editor',
+                heroSubtitle: 'Edit, merge, split, compress and convert PDF files instantly in your browser',
+                merge: 'Merge',
+                mergeDesc: 'Combine multiple PDF files into one document',
+                split: 'Split',
+                splitDesc: 'Split PDF into separate pages',
+                compress: 'Compress',
+                compressDesc: 'Reduce PDF file size',
+                rotate: 'Rotate',
+                rotateDesc: 'Rotate pages in PDF document',
+                extract: 'Extract',
+                extractDesc: 'Extract specific pages from PDF',
+                delete: 'Delete',
+                deleteDesc: 'Remove unnecessary pages',
+                uploadTitle: 'Drop PDF files here',
+                uploadDesc: 'or click to select files',
+                selectFiles: 'Select Files',
+                process: 'Process',
+                remove: 'Remove',
+                success: 'Successfully processed!',
+                error: 'Processing error',
+                download: 'Download',
+                selectTool: 'Select a tool above'
+            }
+        };
+
+        let currentLang = 'bg';
+        let selectedTool = null;
+        let uploadedFiles = [];
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme === 'dark' ? '' : 'light');
+        });
+
+        // Language switcher
+        const langSelect = document.getElementById('langSelect');
+        langSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateLanguage();
+        });
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+        }
+
+        // Tool selection
+        document.querySelectorAll('.tool-card').forEach(card => {
+            card.addEventListener('click', () => {
+                selectedTool = card.getAttribute('data-tool');
+                document.getElementById('uploadArea').classList.add('active');
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => card.style.transform = '', 200);
+            });
+        });
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            uploadedFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+            displayFiles();
+        }
+
+        function displayFiles() {
+            fileList.innerHTML = '';
+            if (uploadedFiles.length === 0) {
+                fileList.classList.remove('active');
+                document.getElementById('actionButtons').classList.remove('active');
+                return;
+            }
+
+            fileList.classList.add('active');
+            document.getElementById('actionButtons').classList.add('active');
+
+            uploadedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-info">
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${(file.size / 1024).toFixed(2)} KB</div>
+                        </div>
+                    </div>
+                    <button class="btn-remove" onclick="removeFile(${index})" data-lang="remove">${translations[currentLang].remove}</button>
+                `;
+                fileList.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            displayFiles();
+        }
+
+        // Process files
+        document.getElementById('processBtn').addEventListener('click', async () => {
+            if (!selectedTool || uploadedFiles.length === 0) return;
+
+            const status = document.getElementById('status');
+            status.style.display = 'block';
+            status.className = 'status';
+            status.textContent = currentLang === 'bg' ? 'Обработка...' : 'Processing...';
+
+            try {
+                let result;
+                switch(selectedTool) {
+                    case 'merge':
+                        result = await mergePDFs(uploadedFiles);
+                        break;
+                    case 'split':
+                        result = await splitPDF(uploadedFiles[0]);
+                        break;
+                    case 'rotate':
+                        result = await rotatePDF(uploadedFiles[0]);
+                        break;
+                    default:
+                        throw new Error('Tool not implemented');
+                }
+
+                status.className = 'status success';
+                status.textContent = translations[currentLang].success;
+                
+                if (result) {
+                    downloadPDF(result, `${selectedTool}-result.pdf`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = translations[currentLang].error + ': ' + error.message;
+            }
+        });
+
+        async function mergePDFs(files) {
+            const { PDFDocument } = PDFLib;
+            const mergedPdf = await PDFDocument.create();
+
+            for (const file of files) {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await PDFDocument.load(arrayBuffer);
+                const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                copiedPages.forEach((page) => mergedPdf.addPage(page));
+            }
+
+            return await mergedPdf.save();
+        }
+
+        async function splitPDF(file) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            
+            // Split into first page only as demo
+            const newPdf = await PDFDocument.create();
+            const [firstPage] = await newPdf.copyPages(pdf, [0]);
+            newPdf.addPage(firstPage);
+            
+            return await newPdf.save();
+        }
+
+        async function rotatePDF(file) {
+            const { PDFDocument, degrees } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            
+            const pages = pdf.getPages();
+            pages.forEach(page => page.setRotation(degrees(90)));
+            
+            return await pdf.save();
+        }
+
+        function downloadPDF(pdfBytes, filename) {
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

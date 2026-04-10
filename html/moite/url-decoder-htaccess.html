@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Декодер за .htaccess</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 60px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #333;
+            word-break: break-all;
+            position: relative;
+        }
+        
+        .result-box.has-content {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+        
+        .copy-btn.copied {
+            background: #4caf50;
+        }
+        
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .example {
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Декодер за .htaccess</h1>
+        <p class="subtitle">Конвертирай URL-encoded адреси в правилния формат за Apache</p>
+        
+        <div class="input-group">
+            <label for="source-url">Стар URL (от адресната лента):</label>
+            <input type="text" id="source-url" placeholder="https://devopsbg.net/%D0%B2%D0%B8%D1%80%D1%82%D1%83%D0%B0%D0%BB%D0%BD%D0%B0-...">
+            <div class="result-box" id="decoded-path">Декодираният път ще се появи тук...</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="target-url">Нов URL (къде да препраща):</label>
+            <input type="text" id="target-url" placeholder="https://urocibg.eu/virtualna-mashina-kakvo-e-kak-raboti-i/">
+            <div class="result-box" id="htaccess-result">Готовата .htaccess директива ще се появи тук...</div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button id="add-btn" style="background: #4caf50; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); transition: all 0.3s;">
+                ➕ Добави към списъка
+            </button>
+            <button id="clear-fields-btn" style="background: #ff9800; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); transition: all 0.3s; margin-left: 10px;">
+                🔄 Изчисти полетата
+            </button>
+        </div>
+        
+        <div id="saved-list" style="display: none; margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="color: #333; font-size: 20px;">📋 Запазени директиви (<span id="count">0</span>)</h2>
+                <div>
+                    <button id="copy-all-btn" style="background: #667eea; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; margin-right: 10px;">
+                        📄 Копирай всички
+                    </button>
+                    <button id="clear-all-btn" style="background: #f44336; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                        🗑️ Изтрий всички
+                    </button>
+                </div>
+            </div>
+            <div id="list-items" style="background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 10px; padding: 15px; max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        
+        <div class="info">
+            <strong>💡 Как работи:</strong>
+            <ul style="margin-top: 10px; margin-left: 20px;">
+                <li>Въведи стария URL-encoded адрес в първото поле</li>
+                <li>Въведи новия URL адрес във второто поле</li>
+                <li>Натисни "Добави към списъка" за да запазиш директивата</li>
+                <li>Повтори за всички URL-и които искаш да препратиш</li>
+                <li>Копирай всички наведнъж за .htaccess файла</li>
+            </ul>
+            <div class="example">
+                <strong>Пример:</strong><br>
+                Redirect 301 /виртуална-машина-какво-е/ https://urocibg.eu/virtualna-mashina/
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const sourceInput = document.getElementById('source-url');
+        const targetInput = document.getElementById('target-url');
+        const decodedPath = document.getElementById('decoded-path');
+        const htaccessResult = document.getElementById('htaccess-result');
+        const addBtn = document.getElementById('add-btn');
+        const clearFieldsBtn = document.getElementById('clear-fields-btn');
+        const savedList = document.getElementById('saved-list');
+        const listItems = document.getElementById('list-items');
+        const copyAllBtn = document.getElementById('copy-all-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const countSpan = document.getElementById('count');
+        
+        let currentDecodedPath = '';
+        let savedDirectives = [];
+        
+        function extractAndDecodePath(url) {
+            try {
+                const urlObj = new URL(url.trim());
+                const path = urlObj.pathname;
+                return decodeURIComponent(path);
+            } catch (e) {
+                return '';
+            }
+        }
+        
+        function updateDecodedPath() {
+            const sourceUrl = sourceInput.value;
+            if (!sourceUrl) {
+                decodedPath.textContent = 'Декодираният път ще се появи тук...';
+                decodedPath.classList.remove('has-content');
+                currentDecodedPath = '';
+                updateHtaccess();
+                return;
+            }
+            
+            currentDecodedPath = extractAndDecodePath(sourceUrl);
+            
+            if (currentDecodedPath) {
+                decodedPath.innerHTML = `${currentDecodedPath}<button class="copy-btn" onclick="copyToClipboard('${currentDecodedPath.replace(/'/g, "\\'")}', this)">Копирай</button>`;
+                decodedPath.classList.add('has-content');
+            } else {
+                decodedPath.textContent = '❌ Невалиден URL';
+                decodedPath.classList.remove('has-content');
+                currentDecodedPath = '';
+            }
+            
+            updateHtaccess();
+        }
+        
+        function updateHtaccess() {
+            const targetUrl = targetInput.value.trim();
+            
+            if (!currentDecodedPath || !targetUrl) {
+                htaccessResult.textContent = 'Готовата .htaccess директива ще се появи тук...';
+                htaccessResult.classList.remove('has-content');
+                return;
+            }
+            
+            const htaccessDirective = `Redirect 301 ${currentDecodedPath} ${targetUrl}`;
+            htaccessResult.innerHTML = `${htaccessDirective}<button class="copy-btn" onclick="copyToClipboard('${htaccessDirective.replace(/'/g, "\\'")}', this)">Копирай</button>`;
+            htaccessResult.classList.add('has-content');
+        }
+        
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Копирано';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+        
+        sourceInput.addEventListener('input', updateDecodedPath);
+        targetInput.addEventListener('input', updateHtaccess);
+        
+        addBtn.addEventListener('click', () => {
+            const targetUrl = targetInput.value.trim();
+            
+            if (!currentDecodedPath || !targetUrl) {
+                alert('Моля, попълни и двете полета!');
+                return;
+            }
+            
+            const directive = `Redirect 301 ${currentDecodedPath} ${targetUrl}`;
+            savedDirectives.push(directive);
+            updateSavedList();
+            
+            // Изчисти полетата след добавяне
+            sourceInput.value = '';
+            targetInput.value = '';
+            decodedPath.textContent = 'Декодираният път ще се появи тук...';
+            decodedPath.classList.remove('has-content');
+            htaccessResult.textContent = 'Готовата .htaccess директива ще се появи тук...';
+            htaccessResult.classList.remove('has-content');
+            currentDecodedPath = '';
+            
+            // Фокус върху първото поле за по-бързо добавяне
+            sourceInput.focus();
+        });
+        
+        clearFieldsBtn.addEventListener('click', () => {
+            sourceInput.value = '';
+            targetInput.value = '';
+            decodedPath.textContent = 'Декодираният път ще се появи тук...';
+            decodedPath.classList.remove('has-content');
+            htaccessResult.textContent = 'Готовата .htaccess директива ще се появи тук...';
+            htaccessResult.classList.remove('has-content');
+            currentDecodedPath = '';
+            sourceInput.focus();
+        });
+        
+        copyAllBtn.addEventListener('click', () => {
+            const allText = savedDirectives.join('\n');
+            copyToClipboard(allText, copyAllBtn);
+        });
+        
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Сигурен ли си, че искаш да изтриеш всички запазени директиви?')) {
+                savedDirectives = [];
+                updateSavedList();
+            }
+        });
+        
+        function updateSavedList() {
+            if (savedDirectives.length === 0) {
+                savedList.style.display = 'none';
+                return;
+            }
+            
+            savedList.style.display = 'block';
+            countSpan.textContent = savedDirectives.length;
+            
+            listItems.innerHTML = savedDirectives.map((directive, index) => `
+                <div style="background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #4caf50; display: flex; justify-content: space-between; align-items: center; font-family: 'Courier New', monospace; font-size: 13px;">
+                    <span style="flex: 1; word-break: break-all;">${directive}</span>
+                    <div style="display: flex; gap: 5px; margin-left: 10px;">
+                        <button onclick="copyDirective(${index})" style="background: #667eea; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                            📋 Копирай
+                        </button>
+                        <button onclick="removeDirective(${index})" style="background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        window.copyDirective = (index) => {
+            const directive = savedDirectives[index];
+            navigator.clipboard.writeText(directive).then(() => {
+                alert('✓ Копирано!');
+            });
+        };
+        
+        window.removeDirective = (index) => {
+            savedDirectives.splice(index, 1);
+            updateSavedList();
+        };
+    </script>
+	
+	
+	
+	
+	
+	<!-- === ЕДИНСТВЕН КОД ЗА ВСИЧКИ СТРАНИЦИ === -->
+<div class="ns-back">
+  <button class="ns-back-btn" onclick="window.location.href='index.html'">
+    Home Назад
+  </button>
+</div>
+
+<style>
+  .ns-back {
+    position: fixed;
+    bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+  .ns-back-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    transition: all 0.25s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .ns-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+    background: #4f46e5;
+  }
+  [data-theme="dark"] .ns-back-btn {
+    background: #818cf8;
+    box-shadow: 0 4px 12px rgba(129,140,248,0.3);
+  }
+  [data-theme="dark"] .ns-back-btn:hover {
+    background: #6366f1;
+  }
+</style>
+</body>
+</html>

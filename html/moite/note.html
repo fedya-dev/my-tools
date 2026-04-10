@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="bg">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteMark Pro v1.8</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .prose h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #6366f1;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .prose h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .prose p {
+            margin-bottom: 1.2rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #818cf8;
+            border-radius: 10px;
+        }
+
+        .note-bg-default {
+            border-left: 4px solid #6366f1;
+        }
+
+        .note-bg-red {
+            border-left: 4px solid #ef4444;
+        }
+
+        .note-bg-green {
+            border-left: 4px solid #10b981;
+        }
+
+        .note-bg-yellow {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .note-bg-purple {
+            border-left: 4px solid #a855f7;
+        }
+
+        .note-bg-blue {
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
+        // LocalStorage Key
+        const STORAGE_KEY = 'notemark_notes_data';
+
+        const NoteMark = () => {
+            const [notes, setNotes] = useState([]);
+            const [currentNoteId, setCurrentNoteId] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [theme, setTheme] = useState(localStorage.getItem('notemark_theme') || 'light');
+            const [showSettings, setShowSettings] = useState(false);
+            const [showMarkdownHelp, setShowMarkdownHelp] = useState(false);
+            const [isSaving, setIsSaving] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+
+            const textareaRef = useRef(null);
+            const activeNote = notes.find(n => n.id === currentNoteId) || (notes.length > 0 ? notes[0] : null);
+
+            // Helpers for LocalStorage
+            const saveToStorage = (updatedNotes) => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedNotes));
+            };
+
+            // Зареждане на бележки
+            const loadNotes = useCallback(() => {
+                setIsLoading(true);
+                try {
+                    const storedData = localStorage.getItem(STORAGE_KEY);
+                    if (storedData) {
+                        const parsedNotes = JSON.parse(storedData);
+                        setNotes(parsedNotes);
+                        if (parsedNotes.length > 0 && !currentNoteId) {
+                            setCurrentNoteId(parsedNotes[0].id);
+                        }
+                    } else {
+                        // Демо данни при първо стартиране
+                        const demoNotes = [
+                            {
+                                id: Date.now(),
+                                title: 'NoteMark Pro - локална версия',
+                                content: '# Добре дошли!\n\nТова е NoteMark Pro, оптимизиран за локална работа.\n\nВсички бележки се пазят във вашия браузър (LocalStorage).\n\n**Започнете да пишете!**',
+                                date: new Date().toISOString(),
+                                color: 'default'
+                            }
+                        ];
+                        setNotes(demoNotes);
+                        setCurrentNoteId(demoNotes[0].id);
+                        saveToStorage(demoNotes);
+                    }
+                } catch (err) {
+                    console.error('Initial load error:', err);
+                } finally {
+                    setIsLoading(false);
+                }
+            }, []);
+
+            useEffect(() => {
+                loadNotes();
+                localStorage.setItem('notemark_theme', theme);
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+            }, [theme]);
+
+            const handleUpdate = (field, value) => {
+                if (!currentNoteId || !activeNote) return;
+
+                setIsSaving(true);
+                const updatedNote = { ...activeNote, [field]: value, date: new Date().toISOString() };
+
+                setNotes(prev => {
+                    const newNotes = prev.map(n => n.id === currentNoteId ? updatedNote : n);
+                    saveToStorage(newNotes);
+                    return newNotes;
+                });
+
+                // Симулираме кратко забавяне за "saving" ефекта
+                setTimeout(() => setIsSaving(false), 300);
+            };
+
+            const createNewNote = () => {
+                const newNote = {
+                    id: Date.now(),
+                    title: 'Нова бележка',
+                    content: '',
+                    date: new Date().toISOString(),
+                    color: 'default'
+                };
+
+                setNotes(prev => {
+                    const newNotes = [newNote, ...prev];
+                    saveToStorage(newNotes);
+                    return newNotes;
+                });
+                setCurrentNoteId(newNote.id);
+            };
+
+            const deleteNote = (id) => {
+                if (!confirm('Изтриване на бележката?')) return;
+
+                setNotes(prev => {
+                    const newNotes = prev.filter(n => n.id !== id);
+                    saveToStorage(newNotes);
+                    if (currentNoteId === id) {
+                        // Ако изтриваме текущата, избираме следващата (или null)
+                        setTimeout(() => setCurrentNoteId(newNotes.length > 0 ? newNotes[0].id : null), 0);
+                    }
+                    return newNotes;
+                });
+            };
+
+            const colors = [
+                { id: 'default', bg: 'bg-indigo-500' },
+                { id: 'red', bg: 'bg-red-500' },
+                { id: 'green', bg: 'bg-emerald-500' },
+                { id: 'yellow', bg: 'bg-amber-500' },
+                { id: 'purple', bg: 'bg-purple-500' },
+                { id: 'blue', bg: 'bg-blue-500' }
+            ];
+
+            const parseMarkdown = (md) => {
+                if (!md) return '<p class="text-slate-400 italic">Започнете да пишете...</p>';
+                return marked.parse(md, { breaks: true, gfm: true });
+            };
+
+            const insertMarkdown = (before, after = before) => {
+                const textarea = textareaRef.current;
+                if (!textarea || !activeNote) return;
+
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selected = textarea.value.substring(start, end);
+                const newContent = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
+                handleUpdate('content', newContent);
+            };
+
+            const filteredNotes = notes.filter(n =>
+                n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                n.content.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (isLoading) {
+                return (
+                    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+                        <div className="text-center">
+                            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
+                            <p className="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300">Зареждане на NoteMark Pro...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`h-screen flex flex-col ${theme === 'dark' ? 'bg-[#0f172a] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
+                    <header className={`h-16 flex items-center justify-between px-6 border-b ${theme === 'dark' ? 'bg-[#1e293b] border-slate-700' : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-slate-200 shadow-sm'}`}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                                <Icon name="pen-tool" size={24} />
+                            </div>
+                            <span className="text-2xl font-bold tracking-tight">NoteMark <span className="text-indigo-600">v1.8</span></span>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            {isSaving && <div className="flex items-center gap-2 text-sm text-slate-500"><div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div> Запазване...</div>}
+                            <button onClick={() => setShowMarkdownHelp(true)} className="p-2 hover:bg-slate-500/10 rounded-lg" title="Markdown помощ"><Icon name="help-circle" /></button>
+                            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 hover:bg-slate-500/10 rounded-lg"><Icon name={theme === 'dark' ? 'sun' : 'moon'} /></button>
+                            <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-slate-500/10 rounded-lg"><Icon name="settings" /></button>
+                        </div>
+                    </header>
+
+                    <div className="flex flex-1 overflow-hidden">
+                        <aside className={`w-80 border-r flex flex-col ${theme === 'dark' ? 'bg-[#1e293b]/60 border-slate-700' : 'bg-white/80 backdrop-blur border-slate-200'}`}>
+                            <div className="p-5">
+                                <button onClick={createNewNote} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl flex items-center justify-center gap-2 font-bold shadow-lg">
+                                    <Icon name="plus" size={20} /> Нова бележка
+                                </button>
+                                <div className="mt-5 relative">
+                                    <Icon name="search" size={18} className="absolute left-3 top-3 text-slate-400" />
+                                    <input type="text" placeholder="Търсене в бележки..." className={`w-full pl-11 pr-4 py-3 rounded-xl border text-sm outline-none transition ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                                {filteredNotes.map(note => (
+                                    <div key={note.id} onClick={() => setCurrentNoteId(note.id)} className={`p-4 rounded-2xl cursor-pointer group flex justify-between items-start transition-all note-bg-${note.color || 'default'} ${currentNoteId === note.id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-indigo-500/10'}`}>
+                                        <div className="flex-1 truncate pr-3">
+                                            <div className="font-semibold truncate">{note.title || 'Без заглавие'}</div>
+                                            <div className="text-xs opacity-60 mt-1">{new Date(note.date).toLocaleString('bg-BG')}</div>
+                                        </div>
+                                        <button onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }} className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg"><Icon name="trash-2" size={16} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        </aside>
+
+                        <main className="flex-1 flex flex-col overflow-hidden">
+                            {activeNote ? (
+                                <>
+                                    <div className={`px-8 py-4 flex items-center justify-between border-b ${theme === 'dark' ? 'border-slate-700/50' : 'border-slate-200'}`}>
+                                        <div className="flex items-center flex-1 gap-6">
+                                            <div className="flex gap-2">
+                                                {colors.map(c => (
+                                                    <button key={c.id} onClick={() => handleUpdate('color', c.id)} className={`w-6 h-6 rounded-full ${c.bg} shadow-md ${activeNote.color === c.id ? 'ring-4 ring-offset-2 ring-indigo-400 scale-110' : ''} transition-all hover:scale-125`} />
+                                                ))}
+                                            </div>
+                                            <input value={activeNote.title || ''} onChange={(e) => handleUpdate('title', e.target.value)} className="text-3xl font-extrabold bg-transparent outline-none flex-1" placeholder="Заглавие на бележката" />
+                                        </div>
+                                        <button onClick={() => { const blob = new Blob([activeNote.content || ''], { type: 'text/markdown' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${activeNote.title || 'note'}.md`; a.click(); }} className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-md"><Icon name="download" size={20} /></button>
+                                    </div>
+
+                                    <div className={`px-8 py-3 flex gap-2 flex-wrap border-b ${theme === 'dark' ? 'border-slate-700/30' : 'border-slate-200'}`}>
+                                        <button onClick={() => insertMarkdown('# ')} title="H1 Заглавие" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="heading" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('## ')} title="H2 Заглавие" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="heading" size={20} /><Icon name="heading" size={14} className="ml-1" /></button>
+                                        <button onClick={() => insertMarkdown('**', '**')} title="Удебелен" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="bold" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('*', '*')} title="Наклонен" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="italic" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('`', '`')} title="Inline код" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="code" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('- ')} title="Списък" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="list" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('[', '](url)')} title="Линк" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="link" size={20} /></button>
+                                        <button onClick={() => insertMarkdown('![', '](image.jpg)')} title="Картинка" className="p-2 hover:bg-indigo-500/20 rounded-lg transition"><Icon name="image" size={20} /></button>
+                                    </div>
+
+                                    <div className="flex-1 flex overflow-hidden">
+                                        <div className="flex-1 border-r border-slate-700/20">
+                                            <textarea ref={textareaRef} value={activeNote.content || ''} onChange={(e) => handleUpdate('content', e.target.value)} className="w-full h-full p-10 bg-transparent outline-none resize-none font-mono text-lg leading-relaxed" placeholder="Пишете тук с Markdown..." />
+                                        </div>
+                                        <div className={`flex-1 p-10 overflow-y-auto ${theme === 'dark' ? 'bg-slate-900/30' : 'bg-slate-50/50'}`}>
+                                            <div className="prose prose-lg max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: parseMarkdown(activeNote.content) }} />
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center opacity-30">
+                                    <Icon name="edit-3" size={100} />
+                                    <p className="mt-6 text-2xl font-bold">Изберете или създайте нова бележка</p>
+                                </div>
+                            )}
+                        </main>
+                    </div>
+
+                    {showMarkdownHelp && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-6" onClick={() => setShowMarkdownHelp(false)}>
+                            <div className={`${theme === 'dark' ? 'bg-[#1e293b] border-slate-700' : 'bg-white'} p-8 rounded-3xl max-w-3xl w-full shadow-2xl border max-h-[90vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-3xl font-bold flex items-center gap-3"><Icon name="book-open" className="text-indigo-500" size={32} /> Markdown Помощ</h2>
+                                    <button onClick={() => setShowMarkdownHelp(false)} className="p-2 hover:bg-slate-500/20 rounded-lg"><Icon name="x" size={28} /></button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                                    <div><h3 className="font-bold text-lg mb-2">Заглавия</h3><pre className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'} p-3 rounded-lg`}># H1<br />## H2<br />### H3</pre></div>
+                                    <div><h3 className="font-bold text-lg mb-2">Удебелен & Наклонен</h3><pre className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'} p-3 rounded-lg`}>**удебелен**<br />*наклонен*</pre></div>
+                                    <div><h3 className="font-bold text-lg mb-2">Списъци</h3><pre className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'} p-3 rounded-lg`}>- списък<br />1. номериран</pre></div>
+                                    <div><h3 className="font-bold text-lg mb-2">Линкове</h3><pre className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-100'} p-3 rounded-lg`}>[текст](url)</pre></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showSettings && (
+                        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                            <div className={`${theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'} p-8 rounded-3xl w-full max-w-sm shadow-2xl border border-slate-700`}>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold flex items-center gap-2"><Icon name="settings" className="text-indigo-500" /> Настройки</h2>
+                                    <button onClick={() => setShowSettings(false)}><Icon name="x" /></button>
+                                </div>
+                                <div className="space-y-6">
+                                    <button onClick={() => { if (confirm('Изтриване на всички бележки?')) { localStorage.removeItem(STORAGE_KEY); setNotes([]); setCurrentNoteId(null); } }} className="w-full py-4 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl font-bold transition-all border border-red-500/20">Изтрий всички бележки</button>
+                                    <div className="p-6 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl border border-indigo-400/30 text-center">
+                                        <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-2">Създадено с ❤️ от Федя Серафиев</p>
+                                        <a href="https://itpraktika.com/" target="_blank" className="text-sm font-medium text-indigo-600 dark:text-indigo-300 hover:underline">ITpraktika.com</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<NoteMark />);
+    </script>
+
+
+  <div class="ns-back">
+    <button class="ns-back-btn" onclick="window.location.href='index.html'">
+      🏠 Home Назад
+    </button>
+  </div>
+
+  <style>
+    .ns-back {
+      position: fixed;
+      bottom: 1rem; 
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+    .ns-back-btn {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.3rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+      transition: all 0.25s ease;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .ns-back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+      background: #4f46e5;
+    }
+  </style>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+{
+    "tools": [
+        {
+            "id": "trans",
+            "icon": "🖨️",
+            "title": "Transliteration",
+            "desc": "Кирилица → Латиница (за URL slug)",
+            "file": "transliteration-tool.html",
+            "keywords": "кирилица латиница slug транслитерация"
+        },
+        {
+            "id": "watermark",
+            "icon": "📃",
+            "title": "Watermark PDF",
+            "desc": "Добавяне на водни знаци в PDF файлове",
+            "file": "watermark.html",
+            "keywords": "pdf водни знаци watermark документи"
+        },
+        {
+            "id": "urldec",
+            "icon": "🌍",
+            "title": "URL Decoder",
+            "desc": "Декодиране на URL адреси и htaccess",
+            "file": "url-decoder-htaccess.html",
+            "keywords": "url decoder htaccess декодиране"
+        },
+        {
+            "id": "genpar",
+            "icon": "🔐",
+            "title": "Генератор на Пароли",
+            "desc": "Създаване на силни и сигурни пароли",
+            "file": "gen_par.html",
+            "keywords": "пароли генератор сигурност password"
+        },
+        {
+            "id": "bash",
+            "icon": "🎨",
+            "title": "Bash Prompt Теми",
+            "desc": "Галерия с красиви Bash prompt теми",
+            "file": "bash_promt.html",
+            "keywords": "bash prompt terminal тема shell"
+        },
+        {
+            "id": "emoji",
+            "icon": "🤡",
+            "title": "Emoji Library",
+            "desc": "Емоджита, които могат да се копират",
+            "file": "emoji.html",
+            "keywords": "emoji емоджи икони копиране"
+        },
+        {
+            "id": "wordcloud",
+            "icon": "☁️",
+            "title": "Word Cloud",
+            "desc": "Създаване на облак от думи",
+            "file": "word-cloud.html",
+            "keywords": "облак думи визуализация текст"
+        },
+        {
+            "id": "tool-1763609633",
+            "icon": "🔗",
+            "title": "IP",
+            "desc": "DNS Lookup • WHOIS • Country by IP",
+            "file": "ip.html",
+            "keywords": "ip"
+        },
+        {
+            "id": "tool-1767101938",
+            "icon": "📅",
+            "title": "Файлов Мениджър",
+            "desc": "Професионална уеб базирана система за управление на файлове, разработена с PHP, JavaScript и HTML\/CSS.",
+            "file": "http:\/\/10.20.20.23\/papka\/",
+            "keywords": "papka, file"
+        },
+        {
+            "id": "tool-1768583757",
+            "icon": "📋",
+            "title": "NoteMark Pro",
+            "desc": "Лек и бърз редактор за бележки с пълна Markdown поддръжка",
+            "file": "http:\/\/10.20.20.23\/note.html",
+            "keywords": "note"
+        }
+    ],
+    "order": [
+        "emoji",
+        "urldec",
+        "trans",
+        "watermark",
+        "genpar",
+        "bash",
+        "tool-1767101938",
+        "wordcloud",
+        "tool-1763609633",
+        "tool-1768583757"
+    ]
+}

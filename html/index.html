@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavHub - Your Personal Tools</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --bg-light: #fafbfc;
+            --bg-dark: #0a0e1a;
+            --card-light: #ffffff;
+            --card-dark: #151b2d;
+            --text-light: #1e293b;
+            --text-dark: #f1f5f9;
+            --text-muted-light: #64748b;
+            --text-muted-dark: #94a3b8;
+            --border-light: #e2e8f0;
+            --border-dark: #1e293b;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        body[data-theme="dark"] {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        body[data-theme="dark"]::before {
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            animation: slideDown 0.6s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted-light);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        body[data-theme="dark"] .logo-subtitle {
+            color: var(--text-muted-dark);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease 0.2s both;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            color: var(--text-light);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        body[data-theme="dark"] .search-box {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted-light);
+            font-size: 1.25rem;
+        }
+
+        body[data-theme="dark"] .search-icon {
+            color: var(--text-muted-dark);
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 56px;
+            height: 32px;
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        body[data-theme="dark"] .theme-toggle {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .theme-toggle-slider {
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle.active .theme-toggle-slider {
+            transform: translateX(24px);
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .view-toggle {
+            display: flex;
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        body[data-theme="dark"] .view-toggle {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .view-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted-light);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        body[data-theme="dark"] .view-btn {
+            color: var(--text-muted-dark);
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .cards-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .card {
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInUp 0.5s ease both;
+        }
+
+        body[data-theme="dark"] .card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg) scale(0.95);
+            cursor: grabbing;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+
+        body[data-theme="dark"] .card-title {
+            color: var(--text-dark);
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted-light);
+            line-height: 1.5;
+        }
+
+        body[data-theme="dark"] .card-desc {
+            color: var(--text-muted-dark);
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .card-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--bg-light);
+            border: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        body[data-theme="dark"] .card-action-btn {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+        }
+
+        .card-action-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .card-action-btn.delete:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .list-view .card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.25rem 1.75rem;
+        }
+
+        .list-view .card-icon {
+            margin-bottom: 0;
+            font-size: 2rem;
+        }
+
+        .list-view .card-content {
+            flex: 1;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease 0.4s both;
+        }
+
+        .stat-card {
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        body[data-theme="dark"] .stat-card {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted-light);
+            margin-top: 0.25rem;
+        }
+
+        body[data-theme="dark"] .stat-label {
+            color: var(--text-muted-dark);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-light);
+            text-align: center;
+            color: var(--text-muted-light);
+            font-size: 0.9rem;
+        }
+
+        body[data-theme="dark"] footer {
+            border-color: var(--border-dark);
+            color: var(--text-muted-dark);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-light);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        body[data-theme="dark"] .modal-content {
+            background: var(--card-dark);
+            border-color: var(--border-dark);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-light);
+            border: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted-light);
+            transition: var(--transition);
+        }
+
+        body[data-theme="dark"] .modal-close {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-muted-dark);
+        }
+
+        .modal-close:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        body[data-theme="dark"] .form-group label {
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--text-light);
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        body[data-theme="dark"] .form-group input,
+        body[data-theme="dark"] .form-group textarea {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            border: 2px solid var(--border-light);
+            color: var(--text-light);
+        }
+
+        body[data-theme="dark"] .btn-secondary {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted-light);
+        }
+
+        body[data-theme="dark"] .empty-state {
+            color: var(--text-muted-dark);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .logo-title { font-size: 1.5rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .header-actions { gap: 0.75rem; }
+            .view-toggle { display: none; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">
+                    <div class="logo-title">NavHub</div>
+                    <div class="logo-subtitle">Моите лични документи</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="admin-btn" id="adminBtn">➕ Добави инструмент</button>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" title="Grid View">⊞</button>
+                    <button class="view-btn" data-view="list" title="List View">☰</button>
+                </div>
+                <div class="theme-toggle" id="themeToggle">
+                    <div class="theme-toggle-slider">🌙</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-box" id="searchBox" placeholder="Търси инструмент...">
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTools">0</div>
+                <div class="stat-label">Инструменти</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="recentlyUsed">0</div>
+                <div class="stat-label">Използвани днес</div>
+            </div>
+        </div>
+
+        <ul class="cards-grid" id="cardGrid"></ul>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">🔍</div>
+            <p>Няма намерени инструменти</p>
+        </div>
+
+        <footer>
+            <p>Подреди картите с плъзгане</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">Създадено с ❤️ от Федя Серафиев</p>
+        </footer>
+    </div>
+
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-close" id="closeAdminModal">×</div>
+            <h2 id="modalTitle">➕ Добави нов инструмент</h2>
+            <form id="toolForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="toolIcon">Емоджи икона</label>
+                    <input type="text" id="toolIcon" placeholder="🎯" maxlength="2" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolTitle">Име на инструмента</label>
+                    <input type="text" id="toolTitle" placeholder="Моят инструмент" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolDesc">Описание</label>
+                    <textarea id="toolDesc" placeholder="Кратко описание какво прави инструментът" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="toolFile">URL адрес / файл</label>
+                    <input type="text" id="toolFile" placeholder="my-tool.html или https://example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolKeywords">Ключови думи (за търсене)</label>
+                    <input type="text" id="toolKeywords" placeholder="инструмент утилита помощник">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Отказ</button>
+                    <button type="submit" class="btn btn-primary">Запази</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const api = {
+            async get() {
+                try {
+                    console.log('Fetching data from API...');
+                    const res = await fetch('api.php?action=get');
+                    console.log('Response status:', res.status);
+                    const data = await res.json();
+                    console.log('Received data:', data);
+                    return data;
+                } catch (error) {
+                    console.error('API GET Error:', error);
+                    alert('Грешка при зареждане на данни: ' + error.message);
+                    return { tools: [], order: [] };
+                }
+            },
+            async add(tool) {
+                try {
+                    const res = await fetch('api.php?action=add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tool)
+                    });
+                    return await res.json();
+                } catch (error) {
+                    console.error('API ADD Error:', error);
+                    alert('Грешка при добавяне: ' + error.message);
+                    return { success: false };
+                }
+            },
+            async update(tool) {
+                try {
+                    const res = await fetch('api.php?action=update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tool)
+                    });
+                    return await res.json();
+                } catch (error) {
+                    console.error('API UPDATE Error:', error);
+                    alert('Грешка при обновяване: ' + error.message);
+                    return { success: false };
+                }
+            },
+            async delete(id) {
+                try {
+                    const res = await fetch('api.php?action=delete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id })
+                    });
+                    return await res.json();
+                } catch (error) {
+                    console.error('API DELETE Error:', error);
+                    alert('Грешка при изтриване: ' + error.message);
+                    return { success: false };
+                }
+            },
+            async saveOrder(order) {
+                try {
+                    const res = await fetch('api.php?action=saveOrder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ order })
+                    });
+                    return await res.json();
+                } catch (error) {
+                    console.error('API SAVE ORDER Error:', error);
+                    return { success: false };
+                }
+            }
+        };
+
+        let currentData = { tools: [], order: [] };
+        let draggedItem = null;
+
+        async function renderCards() {
+            console.log('Starting renderCards...');
+            currentData = await api.get();
+            console.log('Current data:', currentData);
+            
+            const { tools, order } = currentData;
+            
+            if (!tools || tools.length === 0) {
+                console.warn('No tools found!');
+                document.getElementById('emptyState').style.display = 'block';
+                updateStats();
+                return;
+            }
+            
+            let orderedTools = [...tools];
+            if (order && order.length > 0) {
+                orderedTools = [];
+                order.forEach(id => {
+                    const tool = tools.find(t => t.id === id);
+                    if (tool) orderedTools.push(tool);
+                });
+                tools.forEach(tool => {
+                    if (!orderedTools.find(t => t.id === tool.id)) {
+                        orderedTools.push(tool);
+                    }
+                });
+            }
+
+            const cardGrid = document.getElementById('cardGrid');
+            cardGrid.innerHTML = '';
+
+            orderedTools.forEach(tool => {
+                const li = document.createElement('li');
+                li.className = 'card';
+                li.dataset.id = tool.id;
+                li.dataset.file = tool.file;
+                li.dataset.keywords = tool.keywords || '';
+                li.draggable = true;
+
+                li.innerHTML = `
+                    <div class="card-actions">
+                        <div class="card-action-btn edit" data-id="${tool.id}">✏️</div>
+                        <div class="card-action-btn delete" data-id="${tool.id}">🗑️</div>
+                    </div>
+                    <div class="card-icon">${tool.icon}</div>
+                    <div class="card-content">
+                        <h3 class="card-title">${tool.title}</h3>
+                        <p class="card-desc">${tool.desc}</p>
+                    </div>
+                `;
+
+                cardGrid.appendChild(li);
+            });
+
+            console.log('Rendered', orderedTools.length, 'cards');
+            updateStats();
+            attachCardEvents();
+        }
+
+        function updateStats() {
+            document.getElementById('totalTools').textContent = currentData.tools.length;
+            const stats = JSON.parse(localStorage.getItem('navhub-stats') || '{}');
+            const today = new Date().toDateString();
+            const todayCount = (stats.lastDate === today) ? (stats.todayCount || 0) : 0;
+            document.getElementById('recentlyUsed').textContent = todayCount;
+        }
+
+        function attachCardEvents() {
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.card-actions')) return;
+                    if (draggedItem) return;
+                    
+                    const file = card.dataset.file;
+                    updateUsageStats(file);
+                    window.location.href = file;
+                });
+
+                const editBtn = card.querySelector('.edit');
+                if (editBtn) {
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openEditModal(editBtn.dataset.id);
+                    });
+                }
+
+                const deleteBtn = card.querySelector('.delete');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (confirm('Сигурен ли си, че искаш да изтриеш този инструмент?')) {
+                            await api.delete(deleteBtn.dataset.id);
+                            renderCards();
+                        }
+                    });
+                }
+
+                card.addEventListener('dragstart', () => {
+                    draggedItem = card;
+                    setTimeout(() => card.classList.add('dragging'), 0);
+                });
+
+                card.addEventListener('dragend', () => {
+                    setTimeout(() => {
+                        card.classList.remove('dragging');
+                        saveOrder();
+                        draggedItem = null;
+                    }, 0);
+                });
+            });
+        }
+
+        function updateUsageStats(toolFile) {
+            const today = new Date().toDateString();
+            let stats = JSON.parse(localStorage.getItem('navhub-stats') || '{}');
+
+            if (stats.lastDate !== today) {
+                stats = { lastDate: today, todayCount: 0, history: stats.history || {} };
+            }
+
+            stats.todayCount = (stats.todayCount || 0) + 1;
+            stats.history[toolFile] = (stats.history[toolFile] || 0) + 1;
+            stats.lastDate = today;
+
+            localStorage.setItem('navhub-stats', JSON.stringify(stats));
+            document.getElementById('recentlyUsed').textContent = stats.todayCount;
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const themeSlider = themeToggle.querySelector('.theme-toggle-slider');
+
+        const savedTheme = localStorage.getItem('navhub-theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+        if (savedTheme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
+            themeToggle.classList.add('active');
+            themeSlider.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = themeToggle.classList.toggle('active');
+            body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeSlider.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('navhub-theme', isDark ? 'dark' : 'light');
+        });
+
+        const viewBtns = document.querySelectorAll('.view-btn');
+        const cardGrid = document.getElementById('cardGrid');
+
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if (btn.dataset.view === 'list') {
+                    cardGrid.classList.add('list-view');
+                } else {
+                    cardGrid.classList.remove('list-view');
+                }
+                
+                localStorage.setItem('navhub-view', btn.dataset.view);
+            });
+        });
+
+        const savedView = localStorage.getItem('navhub-view');
+        if (savedView === 'list') {
+            cardGrid.classList.add('list-view');
+            document.querySelector('[data-view="list"]').classList.add('active');
+            document.querySelector('[data-view="grid"]').classList.remove('active');
+        }
+
+        const searchBox = document.getElementById('searchBox');
+        const emptyState = document.getElementById('emptyState');
+
+        searchBox.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+                const keywords = card.dataset.keywords || '';
+                
+                if (title.includes(query) || desc.includes(query) || keywords.includes(query)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        });
+
+        cardGrid.addEventListener('dragover', e => e.preventDefault());
+        cardGrid.addEventListener('dragenter', e => {
+            e.preventDefault();
+            if (!draggedItem) return;
+
+            const afterElement = getDragAfterElement(cardGrid, e.clientY);
+            if (afterElement == null) {
+                cardGrid.appendChild(draggedItem);
+            } else {
+                cardGrid.insertBefore(draggedItem, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        async function saveOrder() {
+            const cards = Array.from(cardGrid.children);
+            const order = cards.map(card => card.dataset.id);
+            await api.saveOrder(order);
+        }
+
+        const adminBtn = document.getElementById('adminBtn');
+        const adminModal = document.getElementById('adminModal');
+        const closeAdminModal = document.getElementById('closeAdminModal');
+        const toolForm = document.getElementById('toolForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const modalTitle = document.getElementById('modalTitle');
+
+        adminBtn.addEventListener('click', () => {
+            resetForm();
+            modalTitle.textContent = '➕ Добави нов инструмент';
+            adminModal.classList.add('active');
+        });
+
+        closeAdminModal.addEventListener('click', () => {
+            adminModal.classList.remove('active');
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            adminModal.classList.remove('active');
+        });
+
+        adminModal.addEventListener('click', (e) => {
+            if (e.target === adminModal) {
+                adminModal.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && adminModal.classList.contains('active')) {
+                adminModal.classList.remove('active');
+            }
+        });
+
+        function resetForm() {
+            toolForm.reset();
+            document.getElementById('editId').value = '';
+        }
+
+        function openEditModal(id) {
+            const tool = currentData.tools.find(t => t.id === id);
+            if (!tool) return;
+
+            document.getElementById('editId').value = tool.id;
+            document.getElementById('toolIcon').value = tool.icon;
+            document.getElementById('toolTitle').value = tool.title;
+            document.getElementById('toolDesc').value = tool.desc;
+            document.getElementById('toolFile').value = tool.file;
+            document.getElementById('toolKeywords').value = tool.keywords || '';
+
+            modalTitle.textContent = '✏️ Редактирай инструмент';
+            adminModal.classList.add('active');
+        }
+
+        toolForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const editId = document.getElementById('editId').value;
+            const toolData = {
+                icon: document.getElementById('toolIcon').value.trim(),
+                title: document.getElementById('toolTitle').value.trim(),
+                desc: document.getElementById('toolDesc').value.trim(),
+                file: document.getElementById('toolFile').value.trim(),
+                keywords: document.getElementById('toolKeywords').value.trim()
+            };
+
+            if (editId) {
+                toolData.id = editId;
+                await api.update(toolData);
+            } else {
+                await api.add(toolData);
+            }
+
+            adminModal.classList.remove('active');
+            renderCards();
+        });
+
+        renderCards();
+    </script>
+</body>
+</html>

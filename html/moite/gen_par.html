@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор на Пароли</title>
+    <style>
+        .pwd-gen-wrapper * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .pwd-gen-wrapper {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pwd-gen-container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .pwd-gen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pwd-gen-score,
+        .pwd-gen-time {
+            color: #cbd5e1;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .pwd-gen-score-value,
+        .pwd-gen-time-value {
+            color: #60a5fa;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .pwd-gen-display {
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 35px;
+            margin-bottom: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .pwd-gen-display:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 0 30px rgba(96, 165, 250, 0.2);
+        }
+
+        .pwd-gen-password {
+            font-family: 'Courier New', monospace;
+            font-size: 36px;
+            color: #60a5fa;
+            letter-spacing: 3px;
+            word-break: break-all;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+        }
+
+        .pwd-gen-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .pwd-gen-btn {
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pwd-gen-btn:hover {
+            background: rgba(96, 165, 250, 0.1);
+            border-color: #60a5fa;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(96, 165, 250, 0.3);
+        }
+
+        .pwd-gen-btn:active {
+            transform: translateY(0);
+        }
+
+        .pwd-gen-controls {
+            background: rgba(30, 41, 59, 0.4);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .pwd-gen-section {
+            margin-bottom: 25px;
+        }
+
+        .pwd-gen-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .pwd-gen-label {
+            color: #e2e8f0;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .pwd-gen-type-group {
+            display: flex;
+            gap: 25px;
+        }
+
+        .pwd-gen-radio-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .pwd-gen-radio {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #a855f7;
+        }
+
+        .pwd-gen-radio-label {
+            color: #cbd5e1;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .pwd-gen-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pwd-gen-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 10px;
+            background: linear-gradient(to right, #a855f7 0%, #334155 0%);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .pwd-gen-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #a855f7;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        .pwd-gen-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #a855f7;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        .pwd-gen-char-count {
+            color: #e2e8f0;
+            font-weight: 700;
+            font-size: 18px;
+            min-width: 30px;
+        }
+
+        .pwd-gen-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .pwd-gen-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pwd-gen-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #a855f7;
+        }
+
+        .pwd-gen-checkbox-label {
+            color: #cbd5e1;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 600px) {
+            .pwd-gen-password {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+
+            .pwd-gen-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .pwd-gen-options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .pwd-gen-icon {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="pwd-gen-wrapper">
+        <div class="pwd-gen-container">
+            <div class="pwd-gen-header">
+                <div class="pwd-gen-score">
+                    Оценка на паролата: <span class="pwd-gen-score-value" id="pwdStrength">силна</span>
+                </div>
+                <div class="pwd-gen-time">
+                    Време за взлом: <span class="pwd-gen-time-value" id="pwdTime">векове</span>
+                </div>
+            </div>
+
+            <div class="pwd-gen-display">
+                <div class="pwd-gen-password" id="pwdDisplay">Yq3LFd2yn9RGRu</div>
+            </div>
+
+            <div class="pwd-gen-buttons">
+                <button class="pwd-gen-btn" id="copyBtn">
+                    <svg class="pwd-gen-icon" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Копирай
+                </button>
+                <button class="pwd-gen-btn" id="regenerateBtn">
+                    <svg class="pwd-gen-icon" viewBox="0 0 24 24">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                    </svg>
+                    Генерирай нова
+                </button>
+            </div>
+
+            <div class="pwd-gen-controls">
+                <div class="pwd-gen-section">
+                    <label class="pwd-gen-label">Тип</label>
+                    <div class="pwd-gen-type-group">
+                        <label class="pwd-gen-radio-wrapper">
+                            <input type="radio" name="pwdType" value="password" class="pwd-gen-radio" checked>
+                            <span class="pwd-gen-radio-label">Парола</span>
+                        </label>
+                        <label class="pwd-gen-radio-wrapper">
+                            <input type="radio" name="pwdType" value="passphrase" class="pwd-gen-radio">
+                            <span class="pwd-gen-radio-label">Фраза</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pwd-gen-section">
+                    <label class="pwd-gen-label">Символи: <span class="pwd-gen-char-count" id="charCount">14</span></label>
+                    <div class="pwd-gen-slider-container">
+                        <input type="range" min="8" max="32" value="14" class="pwd-gen-slider" id="lengthSlider">
+                    </div>
+                </div>
+
+                <div class="pwd-gen-section">
+                    <label class="pwd-gen-label">Допълнителни опции</label>
+                    <div class="pwd-gen-options-grid">
+                        <label class="pwd-gen-checkbox-wrapper">
+                            <input type="checkbox" class="pwd-gen-checkbox" id="uppercase" checked>
+                            <span class="pwd-gen-checkbox-label">A-Z</span>
+                        </label>
+                        <label class="pwd-gen-checkbox-wrapper">
+                            <input type="checkbox" class="pwd-gen-checkbox" id="lowercase" checked>
+                            <span class="pwd-gen-checkbox-label">a-z</span>
+                        </label>
+                        <label class="pwd-gen-checkbox-wrapper">
+                            <input type="checkbox" class="pwd-gen-checkbox" id="numbers" checked>
+                            <span class="pwd-gen-checkbox-label">0-9</span>
+                        </label>
+                        <label class="pwd-gen-checkbox-wrapper">
+                            <input type="checkbox" class="pwd-gen-checkbox" id="symbols">
+                            <span class="pwd-gen-checkbox-label">!@#$%^&*</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            length: 14,
+            uppercase: true,
+            lowercase: true,
+            numbers: true,
+            symbols: false
+        };
+
+        function generatePassword() {
+            let chars = '';
+            if (state.uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (state.lowercase) chars += 'abcdefghijklmnopqrstuvwxyz';
+            if (state.numbers) chars += '0123456789';
+            if (state.symbols) chars += '!@#$%^&*';
+
+            if (chars === '') chars = 'abcdefghijklmnopqrstuvwxyz';
+
+            let password = '';
+            for (let i = 0; i < state.length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            return password;
+        }
+
+        function calculateStrength(password) {
+            let score = 0;
+            if (password.length >= 12) score += 2;
+            else if (password.length >= 8) score += 1;
+            
+            if (/[a-z]/.test(password)) score += 1;
+            if (/[A-Z]/.test(password)) score += 1;
+            if (/[0-9]/.test(password)) score += 1;
+            if (/[^A-Za-z0-9]/.test(password)) score += 2;
+
+            if (score <= 2) return { text: 'слаба', time: 'минути' };
+            if (score <= 4) return { text: 'средна', time: 'дни' };
+            if (score <= 6) return { text: 'силна', time: 'години' };
+            return { text: 'много силна', time: 'векове' };
+        }
+
+        function updatePassword() {
+            const password = generatePassword();
+            const strength = calculateStrength(password);
+            
+            document.getElementById('pwdDisplay').textContent = password;
+            document.getElementById('pwdStrength').textContent = strength.text;
+            document.getElementById('pwdTime').textContent = strength.time;
+        }
+
+        function updateSliderBackground() {
+            const slider = document.getElementById('lengthSlider');
+            const percentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.background = `linear-gradient(to right, #a855f7 ${percentage}%, #334155 ${percentage}%)`;
+        }
+
+        document.getElementById('lengthSlider').addEventListener('input', (e) => {
+            state.length = parseInt(e.target.value);
+            document.getElementById('charCount').textContent = state.length;
+            updateSliderBackground();
+            updatePassword();
+        });
+
+        document.getElementById('uppercase').addEventListener('change', (e) => {
+            state.uppercase = e.target.checked;
+            updatePassword();
+        });
+
+        document.getElementById('lowercase').addEventListener('change', (e) => {
+            state.lowercase = e.target.checked;
+            updatePassword();
+        });
+
+        document.getElementById('numbers').addEventListener('change', (e) => {
+            state.numbers = e.target.checked;
+            updatePassword();
+        });
+
+        document.getElementById('symbols').addEventListener('change', (e) => {
+            state.symbols = e.target.checked;
+            updatePassword();
+        });
+
+        document.getElementById('regenerateBtn').addEventListener('click', updatePassword);
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const password = document.getElementById('pwdDisplay').textContent;
+            navigator.clipboard.writeText(password).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<svg class="pwd-gen-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Копирано!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+
+        updateSliderBackground();
+    </script>
+	
+	
+	
+	<!-- === ЕДИНСТВЕН КОД ЗА ВСИЧКИ СТРАНИЦИ === -->
+<div class="ns-back">
+  <button class="ns-back-btn" onclick="window.location.href='index.html'">
+    Home Назад
+  </button>
+</div>
+
+<style>
+  .ns-back {
+    position: fixed;
+    bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+  .ns-back-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    transition: all 0.25s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .ns-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+    background: #4f46e5;
+  }
+  [data-theme="dark"] .ns-back-btn {
+    background: #818cf8;
+    box-shadow: 0 4px 12px rgba(129,140,248,0.3);
+  }
+  [data-theme="dark"] .ns-back-btn:hover {
+    background: #6366f1;
+  }
+</style>
+</body>
+</html>

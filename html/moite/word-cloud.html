@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fedya × AI × DevOps Word Cloud + PNG Export</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: "Segoe UI", sans-serif;
+      color: #fff;
+    }
+    h1 {
+      margin: 30px 0 10px;
+      font-size: 2.8rem;
+      background: linear-gradient(90deg, #00ffaa, #00d4ff, #ff2a6d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .controls {
+      margin: 20px 0;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    input[type="text"] {
+      padding: 12px 20px;
+      font-size: 1.2rem;
+      width: 320px;
+      border: none;
+      border-radius: 30px;
+      outline: none;
+    }
+    button {
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      background: #ff2a6d;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #ff5490; }
+    #exportBtn {
+      background: #00d4ff;
+    }
+    #exportBtn:hover { background: #00ffaa; }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      padding: 8px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .checkbox-wrapper:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .checkbox-wrapper input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+      transform: scale(1.2);
+    }
+    .checkbox-wrapper span {
+      font-size: 1.1rem;
+      user-select: none;
+    }
+
+    #cloud {
+      width: 1000px;
+      height: 700px;
+      margin: 20px 0;
+      background: rgba(0,0,0,0.2);
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 255, 170, 0.3);
+      position: relative;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Fedya × AI × DevOps Word Cloud</h1>
+  
+  <div class="controls">
+    <input type="text" id="seedWord" placeholder="Въведи дума (Fedya, Docker, Proxmox…)" autocomplete="off">
+    <button onclick="generate()">Генерирай</button>
+    <label class="checkbox-wrapper">
+      <input type="checkbox" id="transparentBg">
+      <span>Прозрачен фон</span>
+    </label>
+    <button id="exportBtn" onclick="exportToPNG()">Изтегли PNG</button>
+  </div>
+
+  <div class="status" id="status"></div>
+  <div id="cloud"></div>
+
+  <!-- Библиотеки - фиксирани версии -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.7/d3.layout.cloud.min.js"></script>
+
+  <script>
+    const techWords = [
+      {text: "Claude", size: 90}, {text: "Anthropic", size: 75}, {text: "AI", size: 100},
+      {text: "Grok", size: 90}, {text: "xAI", size: 80}, {text: "ChatGPT", size: 95},
+      {text: "Docker", size: 85}, {text: "Kubernetes", size: 82}, {text: "Proxmox", size: 78},
+      {text: "LLM", size: 75}, {text: "Llama", size: 68}, {text: "Mistral", size: 70},
+      {text: "VS Code", size: 80}, {text: "JetBrains", size: 72}, {text: "IDE", size: 88},
+      {text: "Python", size: 90}, {text: "JavaScript", size: 80}, {text: "TypeScript", size: 75},
+      {text: "Linux", size: 78}, {text: "Git", size: 85}, {text: "GitHub", size: 82},
+      {text: "DevOps", size: 92}, {text: "CI/CD", size: 72}, {text: "Terraform", size: 70},
+      {text: "Ansible", size: 68}, {text: "Jenkins", size: 65}, {text: "Nginx", size: 72},
+      {text: "GPU", size: 75}, {text: "CUDA", size: 68}, {text: "PyTorch", size: 78},
+      {text: "HuggingFace", size: 70}, {text: "RAG", size: 65}, {text: "LangChain", size: 74},
+      {text: "FastAPI", size: 70}, {text: "Node.js", size: 72}, {text: "React", size: 76},
+      {text: "Cloud", size: 80}, {text: "AWS", size: 72}, {text: "GCP", size: 68},
+      {text: "Homelab", size: 67}, {text: "TrueNAS", size: 62}, {text: "ZFS", size: 64},
+      {text: "VM", size: 70}, {text: "Container", size: 76}, {text: "Grafana", size: 68},
+      {text: "DeepSeek", size: 88}, {text: "Fedya", size: 65}, {text: "OpenAI", size: 92},
+      {text: "Gemini", size: 85}, {text: "Perplexity", size: 70}, {text: "Midjourney", size: 73},
+      {text: "Stable Diffusion", size: 68}, {text: "DALL-E", size: 72}, {text: "Redis", size: 66},
+      {text: "PostgreSQL", size: 74}, {text: "MongoDB", size: 70}, {text: "Elasticsearch", size: 68},
+      {text: "Kafka", size: 72}, {text: "RabbitMQ", size: 65}, {text: "Microservices", size: 76},
+      {text: "Serverless", size: 70}, {text: "Edge Computing", size: 68}, {text: "5G", size: 64},
+      {text: "Blockchain", size: 72}, {text: "Web3", size: 68}, {text: "Rust", size: 75},
+      {text: "Go", size: 78}, {text: "Kotlin", size: 66}, {text: "Swift", size: 68},
+      {text: "Flutter", size: 70}, {text: "React Native", size: 72}, {text: "Tailwind", size: 74},
+      {text: "Next.js", size: 76}, {text: "Vue", size: 72}, {text: "Angular", size: 68},
+      {text: "Svelte", size: 70}, {text: "Django", size: 74}, {text: "Flask", size: 68},
+      {text: "Spring", size: 70}, {text: "Laravel", size: 66}, {text: "Ruby on Rails", size: 64},
+      {text: "GraphQL", size: 72}, {text: "REST API", size: 75}, {text: "Prometheus", size: 66},
+      {text: "Datadog", size: 64}, {text: "Splunk", size: 62}, {text: "ELK Stack", size: 68}
+    ];
+
+    const colors = ["#00ffaa", "#00d4ff", "#ff2a6d", "#ffd93d", "#a8e6cf", "#ff9a00", "#d4d4ff", "#ff6bd6"];
+
+    let currentWords = [];
+
+    function setStatus(msg) {
+      document.getElementById("status").textContent = msg;
+    }
+
+    function generate() {
+      try {
+        setStatus("Генериране...");
+        const seed = document.getElementById("seedWord").value.trim();
+        const container = document.getElementById("cloud");
+        container.innerHTML = "";
+
+        let words = techWords.map(w => ({...w}));
+
+        if (seed) {
+          const lower = seed.toLowerCase();
+          const found = words.find(w => w.text.toLowerCase() === lower);
+          if (found) {
+            found.size = 140;
+          } else {
+            words.unshift({text: seed.toUpperCase(), size: 150});
+          }
+        }
+
+        currentWords = words;
+
+        // Проверка дали d3.layout.cloud съществува
+        if (typeof d3.layout === 'undefined' || typeof d3.layout.cloud === 'undefined') {
+          setStatus("Грешка: D3 Cloud библиотеката не е заредена!");
+          console.error("d3.layout.cloud не е дефиниран");
+          return;
+        }
+
+        const layout = d3.layout.cloud()
+          .size([1000, 700])
+          .words(words)
+          .padding(6)
+          .rotate(() => Math.random() > 0.65 ? 90 : 0)
+          .font("Impact, sans-serif")
+          .fontSize(d => d.size)
+          .on("end", draw)
+          .start();
+
+        setStatus("Готово!");
+      } catch (error) {
+        setStatus("Грешка: " + error.message);
+        console.error("Грешка при генериране:", error);
+      }
+    }
+
+    function draw(words) {
+      try {
+        d3.select("#cloud")
+          .append("svg")
+          .attr("width", 1000)
+          .attr("height", 700)
+          .attr("viewBox", "0 0 1000 700")
+          .append("g")
+          .attr("transform", "translate(500,350)")
+          .selectAll("text")
+          .data(words)
+          .enter().append("text")
+          .style("font-size", d => d.size + "px")
+          .style("font-family", "Impact, Arial Black, sans-serif")
+          .style("fill", () => colors[Math.floor(Math.random()*colors.length)])
+          .attr("text-anchor", "middle")
+          .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+          .text(d => d.text)
+          .style("opacity", 0)
+          .transition().duration(900)
+          .style("opacity", 1)
+          .style("filter", "drop-shadow(0 0 10px rgba(0,255,170,0.7))");
+      } catch (error) {
+        setStatus("Грешка при рисуване: " + error.message);
+        console.error("Грешка при рисуване:", error);
+      }
+    }
+
+    function exportToPNG() {
+      const svg = document.querySelector("#cloud svg");
+      if (!svg) {
+        alert("Първо генерирай облак!");
+        return;
+      }
+
+      const isTransparent = document.getElementById("transparentBg").checked;
+      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = 2000;
+      canvas.height = 1400;
+
+      if (!isTransparent) {
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0, "#0f0c29");
+        grad.addColorStop(0.5, "#302b63");
+        grad.addColorStop(1, "#24243e");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const img = new Image();
+      const svgBlob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob(blob => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          const seed = document.getElementById("seedWord").value.trim() || "Fedya";
+          const bgType = isTransparent ? "transparent" : "gradient";
+          a.download = `wordcloud_${seed}_${bgType}_${new Date().toISOString().slice(0,10)}.png`;
+          a.click();
+        }, "image/png", 1.0);
+      };
+      img.src = url;
+    }
+
+    document.getElementById("seedWord").addEventListener("keypress", e => {
+      if (e.key === "Enter") generate();
+    });
+
+    // Изчакваме библиотеките да се заредят
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (typeof d3 !== 'undefined' && typeof d3.layout !== 'undefined' && typeof d3.layout.cloud !== 'undefined') {
+          setStatus("Библиотеките са заредени успешно!");
+          document.getElementById("seedWord").value = "Fedya";
+          generate();
+        } else {
+          setStatus("Грешка: Библиотеките не се зареждат. Проверете интернет връзката.");
+          console.error("D3 или D3-cloud не са налични");
+        }
+      }, 500);
+    });
+  </script>
+
+
+
+<!-- === ЕДИНСТВЕН КОД ЗА ВСИЧКИ СТРАНИЦИ === -->
+<div class="ns-back">
+  <button class="ns-back-btn" onclick="window.location.href='index.html'">
+    Home Назад
+  </button>
+</div>
+
+<style>
+  .ns-back {
+    position: fixed;
+    bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+  .ns-back-btn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+    transition: all 0.25s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .ns-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+    background: #4f46e5;
+  }
+  [data-theme="dark"] .ns-back-btn {
+    background: #818cf8;
+    box-shadow: 0 4px 12px rgba(129,140,248,0.3);
+  }
+  [data-theme="dark"] .ns-back-btn:hover {
+    background: #6366f1;
+  }
+</style>
+</body>
+</html>

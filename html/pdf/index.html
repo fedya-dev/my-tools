@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Редактор - Безплатни PDF Инструменти</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-secondary: #8b5cf6;
+            --border: #475569;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-secondary: #8b5cf6;
+            --border: #cbd5e1;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        [data-theme="light"] .header {
+            background: rgba(248, 250, 252, 0.95);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .btn-icon:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .lang-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            min-width: 120px;
+        }
+
+        .lang-select:hover {
+            border-color: var(--accent);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            padding-top: 1rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                       radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .tool-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .tool-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .tool-card.active::before {
+            transform: scaleX(1);
+        }
+
+        .tool-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            color: white;
+        }
+
+        .tool-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .tool-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .tool-badge {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            align-self: flex-start;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 4rem 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: none;
+        }
+
+        .upload-area.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+            color: var(--accent);
+        }
+
+        .upload-area h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-area p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 0.875rem 2.5rem;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px -1px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        /* File List */
+        .file-list {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .file-list.active {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .file-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .file-item:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            word-break: break-all;
+        }
+
+        .file-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .file-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-preview.active {
+            display: block;
+        }
+
+        .preview-canvas {
+            max-width: 100%;
+            border-radius: 6px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tool Configuration */
+        .tool-config {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .tool-config.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .config-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .config-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .config-group input,
+        .config-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .config-group input:focus,
+        .config-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .range-input input {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            display: none;
+        }
+
+        .action-buttons.active {
+            display: flex;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Status Messages */
+        .status {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .status.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4rem;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Loading State */
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .file-item {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .file-actions {
+                justify-content: flex-end;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .tool-card {
+                padding: 1.5rem;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            <span data-lang="title">PDF Редактор PRO</span>
+        </div>
+        <div class="controls">
+            <select class="lang-select" id="langSelect">
+                <option value="bg">Български</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+            </select>
+            <button class="btn-icon" id="themeToggle" title="Смяна на тема">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn-icon" id="helpBtn" title="Помощ">
+                <i class="fas fa-question"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="hero">
+            <h1 data-lang="heroTitle">Мощен PDF Редактор</h1>
+            <p data-lang="heroSubtitle">Редактирайте, обединявайте, разделяйте, компресирайте и управлявайте PDF файлове напълно безплатно и без нужда от регистрация</p>
+            <div class="hero-stats">
+                <span data-lang="stats">Безопасно • Бързо • Локална обработка</span>
+            </div>
+        </div>
+
+        <div class="tools-grid" id="toolsGrid">
+            <!-- Tools will be populated by JavaScript -->
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3 data-lang="uploadTitle">Пуснете PDF файлове тук</h3>
+            <p data-lang="uploadDesc">или кликнете за избор на файлове. Максимален размер: 50MB</p>
+            <input type="file" class="file-input" id="fileInput" accept=".pdf" multiple>
+            <button class="btn-primary" onclick="document.getElementById('fileInput').click()" data-lang="selectFiles">
+                <i class="fas fa-folder-open"></i>
+                Избери файлове
+            </button>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="tool-config" id="toolConfig"></div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Обработка...</div>
+        </div>
+
+        <div class="action-buttons" id="actionButtons">
+            <button class="btn-primary" id="processBtn" data-lang="process">
+                <i class="fas fa-cogs"></i>
+                Обработи
+            </button>
+            <button class="btn-secondary" id="clearBtn" data-lang="clearAll">
+                <i class="fas fa-trash-alt"></i>
+                Изчисти всичко
+            </button>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <div class="footer">
+        <p data-lang="footerText">© 2024 PDF Редактор PRO. Всички права запазени.</p>
+        <p data-lang="privacyNote">Файловете се обработват локално в браузъра ви. Никога не изпращаме вашите данни на сървър.</p>
+        <div class="footer-links">
+            <a href="#" data-lang="privacy">Поверителност</a>
+            <a href="#" data-lang="terms">Условия</a>
+            <a href="#" data-lang="contact">Контакт</a>
+            <a href="#" data-lang="github">GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        // Extensive translations
+        const translations = {
+            bg: {
+                title: 'PDF Редактор PRO',
+                heroTitle: 'Мощен PDF Редактор',
+                heroSubtitle: 'Редактирайте, обединявайте, разделяйте, компресирайте и управлявайте PDF файлове напълно безплатно и без нужда от регистрация',
+                stats: 'Безопасно • Бързо • Локална обработка',
+                selectTool: 'Изберете инструмент отгоре',
+                
+                // Tools
+                merge: 'Обединяване',
+                mergeDesc: 'Обединете множество PDF файлове в един документ',
+                split: 'Разделяне',
+                splitDesc: 'Разделете PDF на отделни страници или диапазони',
+                compress: 'Компресиране',
+                compressDesc: 'Намалете размера на PDF файла',
+                rotate: 'Завъртане',
+                rotateDesc: 'Завъртете страници в PDF документ',
+                extract: 'Извличане',
+                extractDesc: 'Извлечете конкретни страници от PDF',
+                delete: 'Изтриване',
+                deleteDesc: 'Премахнете ненужни страници',
+                reorder: 'Пренареждане',
+                reorderDesc: 'Променете реда на страниците',
+                watermark: 'Воден знак',
+                watermarkDesc: 'Добавете текст или лого',
+                protect: 'Защита',
+                protectDesc: 'Добавете парола и ограничения',
+                convertImg: 'Изображение към PDF',
+                convertImgDesc: 'Конвертирайте изображения в PDF',
+                
+                // Upload
+                uploadTitle: 'Пуснете PDF файлове тук',
+                uploadDesc: 'или кликнете за избор на файлове. Максимален размер: 50MB',
+                selectFiles: 'Избери файлове',
+                
+                // File list
+                remove: 'Премахни',
+                preview: 'Преглед',
+                pages: 'страници',
+                size: 'размер',
+                
+                // Tool configurations
+                mergeConfig: 'Настройки за обединяване',
+                selectOrder: 'Изберете реда на файловете:',
+                splitConfig: 'Настройки за разделяне',
+                splitBy: 'Раздели по:',
+                splitByPage: 'Всяка страница отделно',
+                splitByRange: 'Диапазон от страници',
+                splitByBookmarks: 'По закладки',
+                splitRange: 'Диапазон (напр. 1-3,5,7-9):',
+                compressConfig: 'Настройки за компресиране',
+                quality: 'Качество:',
+                qualityHigh: 'Високо',
+                qualityMedium: 'Средно',
+                qualityLow: 'Ниско',
+                rotateConfig: 'Настройки за завъртане',
+                rotatePages: 'Страници за завъртане:',
+                rotateAngle: 'Ъгъл на завъртане:',
+                angle90: '90°',
+                angle180: '180°',
+                angle270: '270°',
+                extractConfig: 'Настройки за извличане',
+                extractPages: 'Страници за извличане:',
+                
+                // Actions
+                process: 'Обработи',
+                clearAll: 'Изчисти всичко',
+                download: 'Изтегли',
+                downloading: 'Изтегля се...',
+                
+                // Status messages
+                success: 'Успешно обработено!',
+                error: 'Грешка при обработка',
+                noToolSelected: 'Моля, изберете инструмент',
+                noFilesSelected: 'Моля, качете файлове',
+                processing: 'Обработка...',
+                fileTooLarge: 'Файлът е твърде голям',
+                invalidFile: 'Невалиден файл',
+                maxFiles: 'Достигнахте максималния брой файлове (10)',
+                
+                // Progress
+                progressMerge: 'Обединяване на файлове...',
+                progressSplit: 'Разделяне на PDF...',
+                progressCompress: 'Компресиране...',
+                progressRotate: 'Завъртане на страници...',
+                progressExtract: 'Извличане на страници...',
+                
+                // Footer
+                footerText: '© 2024 PDF Редактор PRO. Всички права запазени.',
+                privacyNote: 'Файловете се обработват локално в браузъра ви. Никога не изпращаме вашите данни на сървър.',
+                privacy: 'Поверителност',
+                terms: 'Условия',
+                contact: 'Контакт',
+                github: 'GitHub'
+            },
+            en: {
+                title: 'PDF Editor PRO',
+                heroTitle: 'Powerful PDF Editor',
+                heroSubtitle: 'Edit, merge, split, compress and manage PDF files completely free without registration',
+                stats: 'Secure • Fast • Local Processing',
+                selectTool: 'Select a tool above',
+                
+                // Tools
+                merge: 'Merge',
+                mergeDesc: 'Combine multiple PDF files into one document',
+                split: 'Split',
+                splitDesc: 'Split PDF into individual pages or ranges',
+                compress: 'Compress',
+                compressDesc: 'Reduce PDF file size',
+                rotate: 'Rotate',
+                rotateDesc: 'Rotate pages in PDF document',
+                extract: 'Extract',
+                extractDesc: 'Extract specific pages from PDF',
+                delete: 'Delete',
+                deleteDesc: 'Remove unnecessary pages',
+                reorder: 'Reorder',
+                reorderDesc: 'Change page order',
+                watermark: 'Watermark',
+                watermarkDesc: 'Add text or logo watermark',
+                protect: 'Protect',
+                protectDesc: 'Add password and restrictions',
+                convertImg: 'Image to PDF',
+                convertImgDesc: 'Convert images to PDF',
+                
+                // Upload
+                uploadTitle: 'Drop PDF files here',
+                uploadDesc: 'or click to select files. Max size: 50MB',
+                selectFiles: 'Select Files',
+                
+                // File list
+                remove: 'Remove',
+                preview: 'Preview',
+                pages: 'pages',
+                size: 'size',
+                
+                // Tool configurations
+                mergeConfig: 'Merge Settings',
+                selectOrder: 'Select file order:',
+                splitConfig: 'Split Settings',
+                splitBy: 'Split by:',
+                splitByPage: 'Each page separately',
+                splitByRange: 'Page range',
+                splitByBookmarks: 'By bookmarks',
+                splitRange: 'Range (e.g., 1-3,5,7-9):',
+                compressConfig: 'Compression Settings',
+                quality: 'Quality:',
+                qualityHigh: 'High',
+                qualityMedium: 'Medium',
+                qualityLow: 'Low',
+                rotateConfig: 'Rotation Settings',
+                rotatePages: 'Pages to rotate:',
+                rotateAngle: 'Rotation angle:',
+                angle90: '90°',
+                angle180: '180°',
+                angle270: '270°',
+                extractConfig: 'Extraction Settings',
+                extractPages: 'Pages to extract:',
+                
+                // Actions
+                process: 'Process',
+                clearAll: 'Clear All',
+                download: 'Download',
+                downloading: 'Downloading...',
+                
+                // Status messages
+                success: 'Successfully processed!',
+                error: 'Processing error',
+                noToolSelected: 'Please select a tool',
+                noFilesSelected: 'Please upload files',
+                processing: 'Processing...',
+                fileTooLarge: 'File is too large',
+                invalidFile: 'Invalid file',
+                maxFiles: 'Maximum files reached (10)',
+                
+                // Progress
+                progressMerge: 'Merging files...',
+                progressSplit: 'Splitting PDF...',
+                progressCompress: 'Compressing...',
+                progressRotate: 'Rotating pages...',
+                progressExtract: 'Extracting pages...',
+                
+                // Footer
+                footerText: '© 2024 PDF Editor PRO. All rights reserved.',
+                privacyNote: 'Files are processed locally in your browser. We never send your data to a server.',
+                privacy: 'Privacy',
+                terms: 'Terms',
+                contact: 'Contact',
+                github: 'GitHub'
+            }
+        };
+
+        // Application state
+        let currentLang = 'bg';
+        let selectedTool = null;
+        let uploadedFiles = [];
+        let toolConfigs = {};
+        const MAX_FILES = 10;
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+        // Available tools with icons and configuration needs
+        const tools = [
+            { id: 'merge', icon: '📄', config: true },
+            { id: 'split', icon: '✂️', config: true },
+            { id: 'compress', icon: '🗜️', config: true },
+            { id: 'rotate', icon: '🔄', config: true },
+            { id: 'extract', icon: '📑', config: true },
+            { id: 'delete', icon: '🗑️', config: true },
+            { id: 'reorder', icon: '📋', config: true },
+            { id: 'watermark', icon: '💧', config: true },
+            { id: 'protect', icon: '🔒', config: true },
+            { id: 'convertImg', icon: '🖼️', config: false }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTools();
+            initializeEventListeners();
+            updateLanguage();
+            
+            // Set initial theme based on system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        });
+
+        function initializeTools() {
+            const toolsGrid = document.getElementById('toolsGrid');
+            toolsGrid.innerHTML = '';
+            
+            tools.forEach(tool => {
+                const toolCard = document.createElement('div');
+                toolCard.className = 'tool-card';
+                toolCard.setAttribute('data-tool', tool.id);
+                toolCard.innerHTML = `
+                    <div class="tool-icon">${tool.icon}</div>
+                    <h3 data-lang="${tool.id}">${translations[currentLang][tool.id]}</h3>
+                    <p data-lang="${tool.id}Desc">${translations[currentLang][`${tool.id}Desc`]}</p>
+                    <span class="tool-badge" data-lang="free">Безплатно</span>
+                `;
+                toolsGrid.appendChild(toolCard);
+            });
+        }
+
+        function initializeEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Language switcher
+            document.getElementById('langSelect').addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                updateLanguage();
+            });
+            
+            // Help button
+            document.getElementById('helpBtn').addEventListener('click', showHelp);
+            
+            // Tool selection
+            document.querySelectorAll('.tool-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const toolId = card.getAttribute('data-tool');
+                    selectTool(toolId);
+                });
+            });
+            
+            // File upload handling
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Clear all button
+            document.getElementById('clearBtn').addEventListener('click', clearAll);
+            
+            // Process button
+            document.getElementById('processBtn').addEventListener('click', processFiles);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            if (html.getAttribute('data-theme') === 'light') {
+                html.removeAttribute('data-theme');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            } else {
+                html.setAttribute('data-theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+        }
+
+        function showHelp() {
+            alert(currentLang === 'bg' 
+                ? 'За помощ изберете инструмент и следвайте инструкциите. Файловете се обработват локално - никога не изпращаме вашите данни на сървър!'
+                : 'Select a tool and follow the instructions. Files are processed locally - we never send your data to a server!');
+        }
+
+        function selectTool(toolId) {
+            // Reset previous selection
+            document.querySelectorAll('.tool-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Set new selection
+            const selectedCard = document.querySelector(`[data-tool="${toolId}"]`);
+            selectedCard.classList.add('active');
+            selectedTool = toolId;
+            
+            // Show upload area
+            document.getElementById('uploadArea').classList.add('active');
+            
+            // Clear previous files and config
+            uploadedFiles = [];
+            document.getElementById('fileList').classList.remove('active');
+            document.getElementById('actionButtons').classList.remove('active');
+            
+            // Show tool configuration
+            showToolConfig(toolId);
+        }
+
+        function showToolConfig(toolId) {
+            const toolConfig = document.getElementById('toolConfig');
+            toolConfig.innerHTML = '';
+            
+            let configHTML = '';
+            
+            switch(toolId) {
+                case 'merge':
+                    configHTML = `
+                        <h3 data-lang="mergeConfig">${translations[currentLang].mergeConfig}</h3>
+                        <div class="config-group">
+                            <label data-lang="selectOrder">${translations[currentLang].selectOrder}</label>
+                            <div id="fileOrderList" class="file-order-list">
+                                <!-- File order will be populated here -->
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'split':
+                    configHTML = `
+                        <h3 data-lang="splitConfig">${translations[currentLang].splitConfig}</h3>
+                        <div class="config-group">
+                            <label data-lang="splitBy">${translations[currentLang].splitBy}</label>
+                            <select id="splitMethod" class="config-select">
+                                <option value="page" data-lang="splitByPage">${translations[currentLang].splitByPage}</option>
+                                <option value="range" data-lang="splitByRange">${translations[currentLang].splitByRange}</option>
+                            </select>
+                        </div>
+                        <div class="config-group" id="rangeConfig" style="display: none;">
+                            <label data-lang="splitRange">${translations[currentLang].splitRange}</label>
+                            <input type="text" id="pageRange" placeholder="1-3,5,7-9">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'compress':
+                    configHTML = `
+                        <h3 data-lang="compressConfig">${translations[currentLang].compressConfig}</h3>
+                        <div class="config-group">
+                            <label data-lang="quality">${translations[currentLang].quality}</label>
+                            <div class="range-input">
+                                <input type="range" id="qualityLevel" min="1" max="100" value="75">
+                                <span class="range-value" id="qualityValue">75%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                                <span data-lang="qualityLow">${translations[currentLang].qualityLow}</span>
+                                <span data-lang="qualityMedium">${translations[currentLang].qualityMedium}</span>
+                                <span data-lang="qualityHigh">${translations[currentLang].qualityHigh}</span>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'rotate':
+                    configHTML = `
+                        <h3 data-lang="rotateConfig">${translations[currentLang].rotateConfig}</h3>
+                        <div class="config-group">
+                            <label data-lang="rotatePages">${translations[currentLang].rotatePages}</label>
+                            <input type="text" id="rotatePages" placeholder="1-3,5,7-9">
+                        </div>
+                        <div class="config-group">
+                            <label data-lang="rotateAngle">${translations[currentLang].rotateAngle}</label>
+                            <select id="rotateAngle" class="config-select">
+                                <option value="90" data-lang="angle90">${translations[currentLang].angle90}</option>
+                                <option value="180" data-lang="angle180">${translations[currentLang].angle180}</option>
+                                <option value="270" data-lang="angle270">${translations[currentLang].angle270}</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'extract':
+                    configHTML = `
+                        <h3 data-lang="extractConfig">${translations[currentLang].extractConfig}</h3>
+                        <div class="config-group">
+                            <label data-lang="extractPages">${translations[currentLang].extractPages}</label>
+                            <input type="text" id="extractPages" placeholder="1-3,5,7-9">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'delete':
+                    configHTML = `
+                        <h3 data-lang="deleteConfig">${translations[currentLang].delete}</h3>
+                        <div class="config-group">
+                            <label data-lang="deletePages">${translations[currentLang].delete} ${translations[currentLang].pages.toLowerCase()}</label>
+                            <input type="text" id="deletePages" placeholder="1-3,5,7-9">
+                        </div>
+                    `;
+                    break;
+            }
+            
+            if (configHTML) {
+                toolConfig.innerHTML = configHTML;
+                toolConfig.classList.add('active');
+                
+                // Initialize config event listeners
+                initializeConfigListeners(toolId);
+            } else {
+                toolConfig.classList.remove('active');
+            }
+        }
+
+        function initializeConfigListeners(toolId) {
+            switch(toolId) {
+                case 'split':
+                    const splitMethod = document.getElementById('splitMethod');
+                    const rangeConfig = document.getElementById('rangeConfig');
+                    
+                    splitMethod.addEventListener('change', function() {
+                        rangeConfig.style.display = this.value === 'range' ? 'block' : 'none';
+                    });
+                    break;
+                    
+                case 'compress':
+                    const qualityLevel = document.getElementById('qualityLevel');
+                    const qualityValue = document.getElementById('qualityValue');
+                    
+                    qualityLevel.addEventListener('input', function() {
+                        qualityValue.textContent = `${this.value}%`;
+                        toolConfigs.compressLevel = this.value;
+                    });
+                    break;
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (!selectedTool) {
+                showStatus('noToolSelected', 'error');
+                return;
+            }
+            
+            // Check file count limit
+            if (uploadedFiles.length + files.length > MAX_FILES) {
+                showStatus('maxFiles', 'error');
+                return;
+            }
+            
+            const validFiles = [];
+            
+            files.forEach(file => {
+                // Validate file
+                if (file.size > MAX_FILE_SIZE) {
+                    showStatus('fileTooLarge', 'error');
+                    return;
+                }
+                
+                if (file.type !== 'application/pdf') {
+                    showStatus('invalidFile', 'error');
+                    return;
+                }
+                
+                validFiles.push(file);
+            });
+            
+            if (validFiles.length > 0) {
+                uploadedFiles.push(...validFiles);
+                displayFiles();
+            }
+        }
+
+        function displayFiles() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            
+            if (uploadedFiles.length === 0) {
+                fileList.classList.remove('active');
+                document.getElementById('actionButtons').classList.remove('active');
+                return;
+            }
+            
+            fileList.classList.add('active');
+            document.getElementById('actionButtons').classList.add('active');
+            
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = createFileItem(file, index);
+                fileList.appendChild(fileItem);
+            });
+            
+            // Update merge order list if needed
+            if (selectedTool === 'merge') {
+                updateMergeOrderList();
+            }
+        }
+
+        function createFileItem(file, index) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            
+            const fileSize = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            
+            item.innerHTML = `
+                <div class="file-info">
+                    <div class="file-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">
+                            <span>${fileSize}</span>
+                            <span class="file-pages" id="pages-${index}">${translations[currentLang].processing}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <button class="btn-secondary" onclick="showPreview(${index})" data-lang="preview">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-danger" onclick="removeFile(${index})" data-lang="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Get page count asynchronously
+            getPageCount(file).then(pages => {
+                const pagesElement = document.getElementById(`pages-${index}`);
+                if (pagesElement) {
+                    pagesElement.textContent = `${pages} ${translations[currentLang].pages}`;
+                    file.pageCount = pages;
+                }
+            });
+            
+            return item;
+        }
+
+        async function getPageCount(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                return pdf.numPages;
+            } catch (error) {
+                console.error('Error getting page count:', error);
+                return '?';
+            }
+        }
+
+        function showPreview(index) {
+            // This would open a modal with PDF preview
+            alert(currentLang === 'bg' 
+                ? `Преглед на файл: ${uploadedFiles[index].name}\n(В реална версия ще се отвори модален прозорец с преглед на PDF)`
+                : `Preview: ${uploadedFiles[index].name}\n(In real version, a modal with PDF preview would open)`);
+        }
+
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            displayFiles();
+        }
+
+        function updateMergeOrderList() {
+            const orderList = document.getElementById('fileOrderList');
+            if (!orderList) return;
+            
+            orderList.innerHTML = '';
+            
+            uploadedFiles.forEach((file, index) => {
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                orderItem.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 6px; margin-bottom: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-icon" onclick="moveFileUp(${index})" ${index === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button class="btn-icon" onclick="moveFileDown(${index})" ${index === uploadedFiles.length - 1 ? 'disabled' : ''}>
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <span>${index + 1}. ${file.name}</span>
+                    </div>
+                `;
+                orderList.appendChild(orderItem);
+            });
+        }
+
+        function moveFileUp(index) {
+            if (index > 0) {
+                [uploadedFiles[index], uploadedFiles[index - 1]] = [uploadedFiles[index - 1], uploadedFiles[index]];
+                updateMergeOrderList();
+            }
+        }
+
+        function moveFileDown(index) {
+            if (index < uploadedFiles.length - 1) {
+                [uploadedFiles[index], uploadedFiles[index + 1]] = [uploadedFiles[index + 1], uploadedFiles[index]];
+                updateMergeOrderList();
+            }
+        }
+
+        function clearAll() {
+            uploadedFiles = [];
+            selectedTool = null;
+            document.querySelectorAll('.tool-card').forEach(card => card.classList.remove('active'));
+            document.getElementById('uploadArea').classList.remove('active');
+            document.getElementById('fileList').classList.remove('active');
+            document.getElementById('actionButtons').classList.remove('active');
+            document.getElementById('toolConfig').classList.remove('active');
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+        }
+
+        async function processFiles() {
+            if (!selectedTool) {
+                showStatus('noToolSelected', 'error');
+                return;
+            }
+            
+            if (uploadedFiles.length === 0) {
+                showStatus('noFilesSelected', 'error');
+                return;
+            }
+            
+            // Show progress
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressContainer.classList.add('active');
+            progressFill.style.width = '0%';
+            progressText.textContent = translations[currentLang][`progress${selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1)}`];
+            
+            // Disable process button
+            const processBtn = document.getElementById('processBtn');
+            processBtn.disabled = true;
+            
+            try {
+                let result;
+                
+                // Simulate progress
+                simulateProgress(progressFill);
+                
+                switch(selectedTool) {
+                    case 'merge':
+                        result = await mergePDFs(uploadedFiles);
+                        break;
+                    case 'split':
+                        result = await splitPDF(uploadedFiles[0]);
+                        break;
+                    case 'compress':
+                        result = await compressPDF(uploadedFiles[0]);
+                        break;
+                    case 'rotate':
+                        result = await rotatePDF(uploadedFiles[0]);
+                        break;
+                    case 'extract':
+                        result = await extractPDF(uploadedFiles[0]);
+                        break;
+                    case 'delete':
+                        result = await deletePDF(uploadedFiles[0]);
+                        break;
+                    default:
+                        throw new Error('Tool not implemented');
+                }
+                
+                // Complete progress
+                progressFill.style.width = '100%';
+                
+                // Show success
+                showStatus('success', 'success');
+                
+                // Download result
+                if (result) {
+                    setTimeout(() => {
+                        downloadPDF(result, `${selectedTool}-result-${Date.now()}.pdf`);
+                        processBtn.disabled = false;
+                        progressContainer.classList.remove('active');
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Processing error:', error);
+                showStatus('error', 'error');
+                progressContainer.classList.remove('active');
+                processBtn.disabled = false;
+            }
+        }
+
+        function simulateProgress(progressFill) {
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 90) {
+                    clearInterval(interval);
+                    return;
+                }
+                width += Math.random() * 10;
+                progressFill.style.width = `${width}%`;
+            }, 200);
+        }
+
+        function showStatus(key, type) {
+            const status = document.getElementById('status');
+            status.textContent = translations[currentLang][key];
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        // PDF Processing Functions
+        async function mergePDFs(files) {
+            const { PDFDocument } = PDFLib;
+            const mergedPdf = await PDFDocument.create();
+            
+            for (const file of files) {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await PDFDocument.load(arrayBuffer);
+                const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                copiedPages.forEach((page) => mergedPdf.addPage(page));
+            }
+            
+            return await mergedPdf.save();
+        }
+
+        async function splitPDF(file) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            const pageCount = pdf.getPageCount();
+            
+            // For demo: split into individual pages
+            const results = [];
+            for (let i = 0; i < pageCount; i++) {
+                const newPdf = await PDFDocument.create();
+                const [copiedPage] = await newPdf.copyPages(pdf, [i]);
+                newPdf.addPage(copiedPage);
+                results.push(await newPdf.save());
+            }
+            
+            return results;
+        }
+
+        async function compressPDF(file) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            
+            // Simple compression by optimizing
+            return await pdf.save({
+                useObjectStreams: true,
+                addDefaultPage: false
+            });
+        }
+
+        async function rotatePDF(file) {
+            const { PDFDocument, degrees } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            const pages = pdf.getPages();
+            
+            // Get config
+            const angle = parseInt(document.getElementById('rotateAngle')?.value || '90');
+            pages.forEach(page => page.setRotation(degrees(angle)));
+            
+            return await pdf.save();
+        }
+
+        async function extractPDF(file) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            const pageCount = pdf.getPageCount();
+            
+            // For demo: extract first 3 pages
+            const extractRange = [0, 1, 2].filter(i => i < pageCount);
+            const newPdf = await PDFDocument.create();
+            const copiedPages = await newPdf.copyPages(pdf, extractRange);
+            copiedPages.forEach(page => newPdf.addPage(page));
+            
+            return await newPdf.save();
+        }
+
+        async function deletePDF(file) {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await PDFDocument.load(arrayBuffer);
+            const pageCount = pdf.getPageCount();
+            
+            // For demo: delete last page if there are multiple pages
+            const pagesToKeep = pageCount > 1 ? 
+                Array.from({length: pageCount - 1}, (_, i) => i) : 
+                Array.from({length: pageCount}, (_, i) => i);
+            
+            const newPdf = await PDFDocument.create();
+            const copiedPages = await newPdf.copyPages(pdf, pagesToKeep);
+            copiedPages.forEach(page => newPdf.addPage(page));
+            
+            return await newPdf.save();
+        }
+
+        function downloadPDF(pdfBytes, filename) {
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Expose functions to global scope for onclick handlers
+        window.showPreview = showPreview;
+        window.removeFile = removeFile;
+        window.moveFileUp = moveFileUp;
+        window.moveFileDown = moveFileDown;
+    </script>
+</body>
+</html>

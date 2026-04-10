@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Емоджи IT Копирай</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤡</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: moveGrid 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes moveGrid {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 40px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      border: 2px solid rgba(255,255,255,0.5);
+      position: relative;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .add-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    #newEmoji {
+      flex: 1;
+      min-width: 200px;
+      padding: 16px 20px;
+      font-size: 2rem;
+      text-align: center;
+      border: 3px solid #e0e0e0;
+      border-radius: 16px;
+      background: #fff;
+      color: #333;
+      transition: all 0.3s;
+      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+    }
+
+    #newEmoji::placeholder {
+      color: #bbb;
+      font-size: 1.2rem;
+    }
+
+    #newEmoji:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+      transform: scale(1.02);
+    }
+
+    button {
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    button:active {
+      transform: translateY(-1px);
+    }
+
+    .export-btn { 
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+    }
+    .export-btn:hover { 
+      box-shadow: 0 8px 25px rgba(17, 153, 142, 0.5);
+    }
+
+    .import-btn {
+      background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(238, 9, 121, 0.4);
+    }
+    .import-btn:hover { 
+      box-shadow: 0 8px 25px rgba(238, 9, 121, 0.5);
+    }
+
+    .import-btn input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .clear-btn { 
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+    .clear-btn:hover { 
+      box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5);
+    }
+
+    .category-section {
+      margin-bottom: 40px;
+    }
+
+    .category-header {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 18px;
+      margin-bottom: 10px;
+    }
+
+    .emoji-item {
+      background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      font-size: 2.6rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: relative;
+      user-select: none;
+      border: 2px solid transparent;
+    }
+
+    .emoji-item:hover {
+      transform: translateY(-8px) scale(1.1);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .emoji-item.copied {
+      animation: copyPulse 0.6s ease-out;
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    @keyframes copyPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .copied-text {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(17, 153, 142, 0.5);
+    }
+
+    .copied-text.show { 
+      opacity: 1;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-10px); }
+      to { transform: translateX(-50%) translateY(0); }
+    }
+
+    .copied-text::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #11998e;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 50%;
+      font-size: 1.1rem;
+      color: white;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+    }
+
+    .emoji-item:hover .delete-btn {
+      opacity: 1;
+      transform: rotate(90deg);
+    }
+
+    .delete-btn:hover {
+      transform: rotate(90deg) scale(1.15);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.6);
+    }
+
+    .custom-emojis-section {
+      border-top: 3px dashed #667eea;
+      padding-top: 30px;
+      margin-top: 30px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: #888;
+      font-size: 0.95rem;
+      padding-top: 30px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    footer p {
+      margin: 5px 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 600px) {
+      .emoji-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      h1 { font-size: 2.2rem; }
+      .container { padding: 25px; }
+      .controls, .add-section { flex-direction: column; }
+      button { width: 100%; justify-content: center; }
+      #newEmoji { min-width: 100%; }
+      .category-header { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Емоджи IT Копирай</h1>
+    <p class="subtitle">Кликни за копиране • Добави собствени • Експорт/Импорт</p>
+
+    <div class="controls">
+      <button id="exportBtn" class="export-btn">
+        <span>📥 Експорт</span>
+      </button>
+      <button class="import-btn">
+        <span>📤 Импорт</span>
+        <input type="file" id="importFile" accept=".json" />
+      </button>
+      <button id="clearBtn" class="clear-btn">
+        <span>🗑️ Изчисти добавени</span>
+      </button>
+    </div>
+
+    <div class="add-section">
+      <input type="text" id="newEmoji" placeholder="Постави емоджи тук..." />
+      <button id="addBtn">
+        <span>➕ Добави</span>
+      </button>
+    </div>
+
+    <div id="categoriesContainer"></div>
+
+    <footer>
+      <p><strong>Съвет:</strong> Експортирай колекцията си и я импортирай в друг браузър! 💡</p>
+      <p>Направено за IT хора с ❤️</p>
+    </footer>
+  </div>
+
+  <script>
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    const newEmojiInput = document.getElementById('newEmoji');
+    const addBtn = document.getElementById('addBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importFile = document.getElementById('importFile');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const emojiCategories = {
+      "😊 Емоции и популярни": [
+        '🤡','👓','🔚','🪙','🍳','🟡','❤️','🖱','📊','🪟',
+        '😍','😘','🥰','😗','😙','😚','🙂','🤗','🤩','🤔',
+        '🤨','😐','😑','😶','🙄','😏','😣','😥','😮','🤐',
+        '😯','😪','😫','😴','😌','😛','😜','😝','🤤','😒',
+        '😓','😔','😕','🙃','🤑','😲','☹️','🙁','😖','😞',
+        '😟','😤','😢','😭','😦','😧','😨','😩','🤯','😬',
+        '😰','😱','🥵','🥶','😳','🤪','😵','🥴','😠','😡'
+      ],
+      "👋 Жестове и ръце": [
+        '👍','👎','👊','✊','🤛','🤜','🤞','✌️','🤟','🤘',
+        '👌','🤌','🤏','👈','👉','👆','👇','☝️','✋','🤚',
+        '🖐️','🖖','👋','🤙','💪','🦾','🖕','✍️','🙏','🦶'
+      ],
+      "💖 Сърца и символи": [
+        '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔',
+        '❤️‍🔥','❤️‍🩹','💕','💞','💓','💗','💖','💘','💝','💟',
+        '☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️'
+      ],
+      "🌍 Природа": [
+        '🌍','🌎','🌏','🌐','🗺️','🗾','🧭','🏔️','⛰️','🌋',
+        '🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱',
+        '🌈','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃',
+        '☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️',
+        '❄️','☃️','⛄','🌬️','💨','💧','💦','☔','⚡','🔥',
+        '💥','⭐','🌟','✨','🌙','🌛','🌜','☄️','🪐','🌞'
+      ],
+      "💻 IT & Технологии": [
+        '💻','🖥️','⌨️','🖱️','🖲️','💽','💾','💿','📀','🧮',
+        '🎮','🕹️','🎯','🎲','🎰','🎳','🏀','⚽','🏈','⚾',
+        '🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒',
+        '📱','📲','☎️','📞','📟','📠','🔋','🔌','💡','🔦',
+        '🕯️','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰'
+      ],
+      "🛠️ Инструменти и обекти": [
+        '🔨','⚒️','🛠️','⛏️','🔧','🔩','⚙️','🗜️','⚖️','🦯',
+        '🔗','⛓️','🧰','🧲','🪜','⚗️','🧪','🧫','🧬','🔬',
+        '🔭','📡','💉','🩸','💊','🩹','🩺','🌡️','🧬','🦠'
+      ],
+      "📊 Работа и офис": [
+        '📧','📨','📩','📤','📥','📦','📫','📪','📬','📭',
+        '📮','🗳️','✏️','✒️','🖋️','🖊️','🖌️','🖍️','📝','💼',
+        '📁','📂','🗂️','📅','📆','🗒️','🗓️','📇','📈','📉',
+        '📊','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗃️'
+      ],
+      "🐛 Код и разработка": [
+        '🐛','🔧','🔨','⚙️','🛠️','🔩','⚗️','🧪','🧬','🔬',
+        '🖥️','💻','⌨️','🖱️','🖲️','💾','💿','📀','🧮','🔌',
+        '🔋','💡','🔦','🕯️','🧯','🗜️','⚖️','🔗','⛓️','🧰'
+      ],
+      "🔒 Безопасност": [
+        '🔒','🔓','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛡️',
+        '🚫','🔞','⚠️','☢️','☣️','⬆️','↗️','➡️','↘️','⬇️',
+        '↙️','⬅️','↖️','↕️','↔️','↩️','↪️','⤴️','⤵️','🔃'
+      ],
+      "✅ Допълнителни популярни": [
+        '✅','❌','⭕','🔴','🟠','🟡','🟢','🔵','🟣','⚫',
+        '⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲',
+        '▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩',
+        '🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','📢',
+        '📣','📯','🔔','🔕','🎼','🎵','🎶','🎤','🎧','📻',
+        '🎷','🪗','🎸','🎹','🎺','🎻','🪕','🥁','🪘','🎬'
+      ]
+    };
+    
+    let customEmojis = JSON.parse(localStorage.getItem('customEmojis')) || [];
+
+    function render() {
+      categoriesContainer.innerHTML = '';
+      
+      // Рендерираме всички категории
+      Object.entries(emojiCategories).forEach(([categoryName, emojis]) => {
+        if (emojis.length > 0) {
+          createCategorySection(categoryName, emojis, false);
+        }
+      });
+      
+      // Рендерираме потребителските емоджита като отделна категория
+      if (customEmojis.length > 0) {
+        createCategorySection('⭐ Мои емоджита', customEmojis, true);
+      }
+    }
+
+    function createCategorySection(categoryName, emojis, isCustom) {
+      const section = document.createElement('div');
+      section.className = 'category-section';
+      if (isCustom) {
+        section.classList.add('custom-emojis-section');
+      }
+      
+      const header = document.createElement('div');
+      header.className = 'category-header';
+      header.innerHTML = `${categoryName} <span class="badge">${emojis.length}</span>`;
+      
+      const grid = document.createElement('div');
+      grid.className = 'emoji-grid';
+      
+      emojis.forEach((emoji, i) => {
+        const el = document.createElement('div');
+        el.className = 'emoji-item';
+        el.textContent = emoji;
+
+        el.addEventListener('click', (e) => {
+          if (e.target.classList.contains('delete-btn')) return;
+          copy(emoji, el);
+        });
+
+        // Добавяме бутон за изтриване само за потребителските емоджита
+        if (isCustom) {
+          const del = document.createElement('div');
+          del.className = 'delete-btn';
+          del.textContent = '×';
+          del.title = 'Изтрий';
+          del.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Изтрий ${emoji}?`)) {
+              customEmojis.splice(i, 1);
+              saveAndRender();
+            }
+          };
+          el.appendChild(del);
+        }
+
+        grid.appendChild(el);
+      });
+      
+      section.appendChild(header);
+      section.appendChild(grid);
+      categoriesContainer.appendChild(section);
+    }
+
+    function copy(emoji, el) {
+      copyFallback(emoji, el);
+    }
+
+    function copyFallback(emoji, el) {
+      const textArea = document.createElement('textarea');
+      textArea.value = emoji;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      textArea.style.opacity = '0';
+      textArea.setAttribute('readonly', '');
+      document.body.appendChild(textArea);
+      
+      try {
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showCopyFeedback(el);
+        } else {
+          showManualCopy(emoji, el);
+        }
+      } catch (err) {
+        showManualCopy(emoji, el);
+      }
+      
+      document.body.removeChild(textArea);
+    }
+
+    function showCopyFeedback(el) {
+      el.classList.add('copied');
+      let tip = el.querySelector('.copied-text');
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.className = 'copied-text';
+        tip.textContent = '✓ Копирано!';
+        el.appendChild(tip);
+      }
+      tip.classList.add('show');
+      setTimeout(() => {
+        el.classList.remove('copied');
+        tip.classList.remove('show');
+      }, 1500);
+    }
+
+    function showManualCopy(emoji, el) {
+      const manualTip = document.createElement('div');
+      manualTip.className = 'copied-text';
+      manualTip.textContent = `Копирай ръчно: ${emoji}`;
+      manualTip.style.background = 'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)';
+      el.appendChild(manualTip);
+      manualTip.classList.add('show');
+      
+      setTimeout(() => {
+        manualTip.classList.remove('show');
+        setTimeout(() => {
+          if (manualTip.parentNode) {
+            manualTip.parentNode.removeChild(manualTip);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    function add() {
+      const val = newEmojiInput.value.trim();
+      if (!val) {
+        alert('Моля, въведи емоджи!');
+        return;
+      }
+      if (getAllEmojis().includes(val)) {
+        alert('Това емоджи вече съществува! 🔁');
+        return;
+      }
+      customEmojis.push(val);
+      saveAndRender();
+      newEmojiInput.value = '';
+      newEmojiInput.focus();
+    }
+
+    function getAllEmojis() {
+      const allEmojis = [];
+      Object.values(emojiCategories).forEach(category => {
+        allEmojis.push(...category);
+      });
+      allEmojis.push(...customEmojis);
+      return allEmojis;
+    }
+
+    addBtn.onclick = add;
+    newEmojiInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') add();
+    });
+
+    newEmojiInput.addEventListener('paste', (e) => {
+      setTimeout(() => {
+        const pasted = newEmojiInput.value;
+        if (pasted) {
+          newEmojiInput.value = pasted;
+        }
+      }, 10);
+    });
+
+    exportBtn.onclick = () => {
+      const allEmojis = getAllEmojis();
+      const data = JSON.stringify(allEmojis, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `emojis-it-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    importFile.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (Array.isArray(imported) && imported.every(s => typeof s === 'string')) {
+            if (confirm(`Импорт на ${imported.length} емоджита? Текущите ще бъдат заменени.`)) {
+              // Запазваме дефолтните емоджита и добавяме импортираните като потребителски
+              const defaultEmojis = Object.values(emojiCategories).flat();
+              const newCustomEmojis = imported.filter(emoji => !defaultEmojis.includes(emoji));
+              customEmojis = [...newCustomEmojis];
+              saveAndRender();
+              alert('✅ Успешно импортирано!');
+            }
+          } else {
+            alert('❌ Невалиден файл.');
+          }
+        } catch {
+          alert('❌ Грешка при четене.');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    };
+
+    clearBtn.onclick = () => {
+      if (customEmojis.length === 0) {
+        alert('Нямаш добавени емоджита за изтриване!');
+        return;
+      }
+      if (confirm(`Изтриване на всички ${customEmojis.length} добавени емоджита?`)) {
+        customEmojis = [];
+        saveAndRender();
+        alert('✅ Изчистено!');
+      }
+    };
+
+    function saveAndRender() {
+      localStorage.setItem('customEmojis', JSON.stringify(customEmojis));
+      render();
+    }
+
+    render();
+    newEmojiInput.focus();
+  </script>
+
+  <div class="ns-back">
+    <button class="ns-back-btn" onclick="window.location.href='index.html'">
+      🏠 Home Назад
+    </button>
+  </div>
+
+  <style>
+    .ns-back {
+      position: fixed;
+      bottom: 1rem; 
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+    .ns-back-btn {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.3rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+      transition: all 0.25s ease;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .ns-back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+      background: #4f46e5;
+    }
+  </style>
+</body>
+</html>

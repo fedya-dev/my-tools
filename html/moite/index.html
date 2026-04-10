@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="bg">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavHub - Your Personal Tools</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay" style="display: none;">
+        <div class="login-card">
+            <div class="login-icon">🔒</div>
+            <h1 class="login-title">NavHub Вход</h1>
+            <p class="login-subtitle">Моля, въведете парола за достъп</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Парола..." required
+                        autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Вход</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="appContainer">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">
+                    <div class="logo-title">NavHub</div>
+                    <div class="logo-subtitle">Моите лични документи</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="admin-btn" id="adminBtn">➕ Добави</button>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" title="Grid View">⊞</button>
+                    <button class="view-btn" data-view="list" title="List View">☰</button>
+                </div>
+                <div class="theme-toggle" id="themeToggle">
+                    <div class="theme-toggle-slider">🌙</div>
+                </div>
+                <button class="view-btn" id="logoutBtn" title="Изход" style="margin-left: 0.5rem;">🚪</button>
+            </div>
+        </header>
+
+        <div class="search-container">
+            <div class="search-icon">🔍</div>
+            <input type="text" class="search-box" id="searchBox"
+                placeholder="Търси инструмент... (Натисни '/' за бърз достъп)">
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalTools">0</div>
+                <div class="stat-label">Инструменти</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="recentlyUsed">0</div>
+                <div class="stat-label">Използвани днес</div>
+            </div>
+        </div>
+
+        <ul class="cards-grid" id="cardGrid"></ul>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">🔍</div>
+            <p>Няма намерени инструменти</p>
+        </div>
+
+        <footer>
+            <p>Подреди картите с плъзгане • Десен клик за опции</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">Създадено с ❤️ от Федя Серафиев</p>
+        </footer>
+    </div>
+
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <div class="modal-close" id="closeAdminModal">×</div>
+            <h2 id="modalTitle">➕ Добави нов инструмент</h2>
+            <form id="toolForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="toolIcon">Емоджи икона</label>
+                    <input type="text" id="toolIcon" placeholder="🎯" maxlength="2" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolTitle">Име на инструмента</label>
+                    <input type="text" id="toolTitle" placeholder="Моят инструмент" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolDesc">Описание</label>
+                    <textarea id="toolDesc" placeholder="Кратко описание какво прави инструментът" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="toolFile">URL адрес / файл</label>
+                    <input type="text" id="toolFile" placeholder="my-tool.html или https://example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="toolKeywords">Ключови думи (за търсене)</label>
+                    <input type="text" id="toolKeywords" placeholder="инструмент утилита помощник">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Отказ</button>
+                    <button type="submit" class="btn btn-primary">Запази</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Logic -->
+    <script type="module" src="assets/js/app.js"></script>
+</body>
+
+</html>
