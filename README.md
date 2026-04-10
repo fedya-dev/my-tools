@@ -1,5 +1,7 @@
 # My Tools
 
+![NavHub](NavHub.png)
+
 Личен сървър с инструменти, работещ в Docker.
 
 ## Изисквания
@@ -62,6 +64,7 @@ git push
 ```
 my-tools/
 ├── docker-compose.yml   # Docker конфигурация
+├── NavHub.png           # Screenshot на интерфейса
 ├── .gitignore
 ├── README.md
 └── html/                # Всички файлове на сайта
